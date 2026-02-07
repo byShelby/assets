@@ -1,362 +1,303 @@
-// app.js — Production-ready asset library (GitHub Pages)
-// Auto-detect base path (works for / or /<repo>/)
-
-const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-function getBasePath() {
-  // Examples:
-  // - https://byshelby.github.io/assets/           -> "/assets/"
-  // - https://username.github.io/                 -> "/"
-  const path = window.location.pathname;
-  // Ensure trailing slash
-  const normalized = path.endsWith("/") ? path : path + "/";
-  // If this is a repo page, base is first segment: "/assets/"
-  const parts = normalized.split("/").filter(Boolean); // ["assets", ...]
-  if (parts.length >= 1) return `/${parts[0]}/`;
-  return "/";
-}
-
-const BASE = getBasePath();
-const MANIFEST_URL = `${BASE}data/manifest.json?v=${Date.now()}`;
+const $ = (id) => document.getElementById(id);
 
 const state = {
+  lang: "en",
   manifest: null,
-  lang: "zh",
-  query: "",
-  activeCategory: "avatars",
-  activeGroup: "root",
+  base: "",
+  repo: "",
+  currentCategory: "avatars",
+  currentGroup: "root",
+  filtered: [],
+  flat: [],
+  modalIndex: -1,
 };
 
 const i18n = {
-  zh: {
-    title: "你的资源库",
-    search: "搜索：分类 / 子分类 / 文件名（例如：avatar / icon / bg）",
-    avatars: "Avatars",
-    icons: "Icons",
-    photos: "Photos",
-    empty: "暂无内容",
-    openRepo: "Open Repo",
-    copy: "复制直链",
-    open: "打开",
-    close: "关闭",
-    copied: "已复制",
-    failed: "资源索引加载失败",
-    retry: "重试",
-  },
   en: {
-    title: "Asset Library",
-    search: "Search: category / group / filename (e.g. avatar / icon / bg)",
-    avatars: "Avatars",
-    icons: "Icons",
-    photos: "Photos",
-    empty: "No items",
+    title: "Your Asset Library",
+    subtitle: "Search, preview, and copy direct links. Clean, fast, and stable.",
+    search: "Search: category / group / filename (e.g. avatar-1, icons, bg)",
     openRepo: "Open Repo",
     copy: "Copy link",
     open: "Open",
-    close: "Close",
-    copied: "Copied",
-    failed: "Failed to load asset index",
-    retry: "Retry",
+    done: "Done",
+    empty: "No assets in this category.",
+    loaded: (n) => `Loaded ${n} items`,
+  },
+  zh: {
+    title: "你的资源库",
+    subtitle: "搜索、预览、复制直链。干净、快速、稳定。",
+    search: "搜索：分类 / 分组 / 文件名（例如 avatar-1 / icons / bg）",
+    openRepo: "打开仓库",
+    copy: "复制链接",
+    open: "打开",
+    done: "完成",
+    empty: "该分类暂无资源。",
+    loaded: (n) => `已加载 ${n} 个`,
   },
 };
 
-function t(key) {
-  return (i18n[state.lang] && i18n[state.lang][key]) || key;
+function text(key, ...args) {
+  const t = i18n[state.lang][key];
+  return typeof t === "function" ? t(...args) : t;
 }
 
-function repoUrlFromPages() {
-  // https://username.github.io/repo/  -> https://github.com/username/repo
-  const host = window.location.host; // username.github.io
-  const username = host.split(".")[0];
-  const parts = window.location.pathname.split("/").filter(Boolean);
-  const repo = parts[0] || "";
-  if (!repo) return `https://github.com/${username}`;
-  return `https://github.com/${username}/${repo}`;
+function computeBase() {
+  // Ensures base ends with "/assets/" when hosted at https://xxx.github.io/assets/
+  const url = new URL(window.location.href);
+  // "." gives directory of current page (with trailing slash)
+  const base = new URL(".", url).href;
+  return base.endsWith("/") ? base : base + "/";
 }
 
-function assetPagesUrl(relPath) {
-  // relPath: "avatars/avatar-1.jpg"
-  return `${BASE}${relPath}`;
+function computeRepoUrl() {
+  // Best effort: infer owner/repo from /assets/ path => owner.github.io + repo = "assets"
+  // If your repo name isn't "assets", set it manually below.
+  const host = window.location.hostname; // byShelby.github.io
+  const owner = host.split(".")[0];
+  const repo = "assets"; // <-- if your repo name differs, change it here.
+  return `https://github.com/${owner}/${repo}`;
+}
+
+function absUrl(relPath) {
+  // manifest paths are like "avatars/avatar-1.jpg"
+  return state.base + relPath.replace(/^\/+/, "");
 }
 
 async function loadManifest() {
-  const res = await fetch(MANIFEST_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  state.base = computeBase();
+  state.repo = computeRepoUrl();
+
+  const res = await fetch(state.base + "data/manifest.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("manifest fetch failed");
+  state.manifest = await res.json();
+
+  // Build a flat list for search + modal navigation
+  const cats = state.manifest.categories || {};
+  state.flat = [];
+  for (const [catName, cat] of Object.entries(cats)) {
+    const groups = (cat && cat.groups) || {};
+    for (const [groupName, items] of Object.entries(groups)) {
+      for (const p of items) {
+        state.flat.push({ category: catName, group: groupName, path: p, url: absUrl(p) });
+      }
+    }
+  }
 }
 
-function normalizeManifest(m) {
-  // Accept your current schema:
-  // { generatedAt, categories: { avatars: { total, groups: { root: [...] } } } }
-  // Also accept legacy:
-  // { assets: { avatars: [], icons: [], photos: [] } }
-  if (m?.categories) return m;
-  if (m?.assets) {
-    const toGroups = (arr) => ({ total: arr.length, groups: { root: arr } });
-    return {
-      generatedAt: new Date().toISOString(),
-      categories: {
-        avatars: toGroups(m.assets.avatars || []),
-        icons: toGroups(m.assets.icons || []),
-        photos: toGroups(m.assets.photos || []),
-      },
+function renderTabs() {
+  const tabs = $("tabs");
+  tabs.innerHTML = "";
+
+  const cats = state.manifest.categories || {};
+  const catNames = Object.keys(cats);
+
+  catNames.forEach((catName) => {
+    const total = cats[catName]?.total ?? 0;
+    const btn = document.createElement("button");
+    btn.className = "chip" + (state.currentCategory === catName ? " active" : "");
+    btn.type = "button";
+    btn.textContent = `${catName} · ${total}`;
+    btn.onclick = () => {
+      state.currentCategory = catName;
+      state.currentGroup = "root";
+      $("search").value = "";
+      renderAll();
     };
-  }
-  return {
-    generatedAt: new Date().toISOString(),
-    categories: {
-      avatars: { total: 0, groups: {} },
-      icons: { total: 0, groups: {} },
-      photos: { total: 0, groups: {} },
-    },
-  };
-}
-
-function setLang(next) {
-  state.lang = next;
-  render();
-}
-
-function setCategory(cat) {
-  state.activeCategory = cat;
-  // reset group to "root" or first available
-  const groups = state.manifest?.categories?.[cat]?.groups || {};
-  state.activeGroup = groups.root ? "root" : Object.keys(groups)[0] || "root";
-  render();
-}
-
-function setGroup(group) {
-  state.activeGroup = group;
-  render();
-}
-
-function matchesQuery(path) {
-  const q = state.query.trim().toLowerCase();
-  if (!q) return true;
-  return path.toLowerCase().includes(q);
-}
-
-function createEl(tag, attrs = {}, children = []) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") el.className = v;
-    else if (k === "html") el.innerHTML = v;
-    else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v);
-  }
-  children.forEach((c) => el.appendChild(c));
-  return el;
-}
-
-function toast(msg) {
-  const el = $("#toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove("show"), 1200);
-}
-
-function openModal(itemPath) {
-  const modal = $("#modal");
-  const img = $("#modalImg");
-  const link = $("#modalLink");
-
-  const url = assetPagesUrl(itemPath);
-  img.src = url;
-  link.value = url;
-
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden", "false");
-}
-
-function closeModal() {
-  const modal = $("#modal");
-  const img = $("#modalImg");
-  img.src = "";
-  modal.classList.remove("open");
-  modal.setAttribute("aria-hidden", "true");
-}
-
-function buildGroupChips(category) {
-  const groups = state.manifest?.categories?.[category]?.groups || {};
-  const names = Object.keys(groups);
-  // hide if only root
-  if (names.length <= 1 && names[0] === "root") return createEl("div", { class: "chips hidden" });
-
-  const wrap = createEl("div", { class: "chips" });
-  names.forEach((g) => {
-    const btn = createEl("button", {
-      class: `chip ${g === state.activeGroup ? "active" : ""}`,
-      onClick: () => setGroup(g),
-      type: "button",
-    });
-    btn.textContent = g;
-    wrap.appendChild(btn);
+    tabs.appendChild(btn);
   });
-  return wrap;
 }
 
-function buildGrid(category, group) {
-  const groups = state.manifest?.categories?.[category]?.groups || {};
-  const list = (groups[group] || []).filter(matchesQuery);
+function getCurrentItems() {
+  const cats = state.manifest.categories || {};
+  const cat = cats[state.currentCategory];
+  const groups = (cat && cat.groups) || {};
+  const groupNames = Object.keys(groups);
+
+  // If currentGroup not exist, fallback to first group or "root"
+  if (!groups[state.currentGroup]) {
+    state.currentGroup = groupNames.includes("root") ? "root" : (groupNames[0] || "root");
+  }
+
+  const items = groups[state.currentGroup] || [];
+  return { items, groupNames };
+}
+
+function renderGrid(list) {
+  const grid = $("grid");
+  grid.innerHTML = "";
 
   if (!list.length) {
-    return createEl("div", { class: "empty" }, [createEl("div", { class: "emptyText", html: t("empty") })]);
+    const div = document.createElement("div");
+    div.className = "empty";
+    div.textContent = text("empty");
+    grid.appendChild(div);
+    return;
   }
 
-  const grid = createEl("div", { class: "grid" });
-  list.forEach((p) => {
-    const url = assetPagesUrl(p);
+  list.forEach((it) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.tabIndex = 0;
 
-    const card = createEl("button", {
-      class: "tile",
-      type: "button",
-      onClick: () => openModal(p),
-      title: p,
-    });
+    const img = document.createElement("img");
+    img.className = "thumb";
+    img.loading = "lazy";
+    img.src = it.url;
+    img.alt = it.path;
 
-    const img = createEl("img", {
-      class: "thumb",
-      loading: "lazy",
-      src: url,
-      alt: p,
-    });
+    const meta = document.createElement("div");
+    meta.className = "meta";
 
-    const name = p.split("/").pop();
-    const cap = createEl("div", { class: "cap", html: `<span>${name}</span>` });
+    const tag = document.createElement("div");
+    tag.className = "tag mono";
+    tag.textContent = it.path.split("/").pop();
+
+    const badge = document.createElement("div");
+    badge.className = "badge mono";
+    badge.textContent = it.category;
+
+    meta.appendChild(tag);
+    meta.appendChild(badge);
 
     card.appendChild(img);
-    card.appendChild(cap);
+    card.appendChild(meta);
+
+    const open = () => openModalByPath(it.path);
+    card.onclick = open;
+    card.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") open();
+    };
 
     grid.appendChild(card);
   });
-
-  return grid;
 }
 
-function buildCategoryPanel(categoryKey) {
-  const cat = state.manifest?.categories?.[categoryKey] || { total: 0, groups: {} };
-  const total = cat.total || 0;
-
-  const header = createEl("div", { class: "panelHeader" }, [
-    createEl("div", { class: "panelTitle" }, [
-      createEl("div", { class: "panelName", html: t(categoryKey) }),
-      createEl("div", { class: "panelCount", html: String(total) }),
-    ]),
-  ]);
-
-  const chips = buildGroupChips(categoryKey);
-
-  const body = createEl("div", { class: "panelBody noScrollBar" }, [
-    chips,
-    buildGrid(categoryKey, categoryKey === state.activeCategory ? state.activeGroup : "root"),
-  ]);
-
-  const panel = createEl("div", {
-    class: `panel ${categoryKey === state.activeCategory ? "active" : ""}`,
-  });
-
-  panel.addEventListener("click", (e) => {
-    // clicking inside should not switch category
-    if (categoryKey !== state.activeCategory) setCategory(categoryKey);
-    e.stopPropagation();
-  });
-
-  panel.appendChild(header);
-  panel.appendChild(body);
-  return panel;
+function renderStatus(n) {
+  $("status").textContent = text("loaded", n);
 }
 
-function renderHeader() {
-  $("#title").textContent = t("title");
-  $("#search").setAttribute("placeholder", t("search"));
-  $("#repoBtn").textContent = t("openRepo");
-  $("#langBtn").textContent = state.lang.toUpperCase();
-}
+function renderAll() {
+  // Top copy & text
+  $("title").textContent = text("title");
+  $("subtitle").textContent = text("subtitle");
+  $("search").placeholder = text("search");
+  $("repoBtn").textContent = text("openRepo");
+  $("repoBtn").href = state.repo;
+  $("langBtn").textContent = state.lang.toUpperCase();
+  $("copyBtn").textContent = text("copy");
+  $("openBtn").textContent = text("open");
+  $("closeBtn").textContent = text("done");
 
-function renderMain() {
-  const wrap = $("#panels");
-  wrap.innerHTML = "";
+  renderTabs();
 
-  wrap.appendChild(buildCategoryPanel("avatars"));
-  wrap.appendChild(buildCategoryPanel("icons"));
-  wrap.appendChild(buildCategoryPanel("photos"));
-}
+  const q = $("search").value.trim().toLowerCase();
+  let list = [];
 
-function renderError() {
-  $("#errorTitle").textContent = t("failed");
-  $("#retryBtn").textContent = t("retry");
-}
-
-function render() {
-  renderHeader();
-  renderError();
-
-  $("#repoBtn").setAttribute("href", repoUrlFromPages());
-
-  if (!state.manifest) {
-    $("#error").classList.add("show");
-    $("#panels").innerHTML = "";
-    return;
+  if (q) {
+    list = state.flat.filter((x) => {
+      const s = `${x.category}/${x.group}/${x.path}`.toLowerCase();
+      return s.includes(q);
+    });
+  } else {
+    const { items } = getCurrentItems();
+    list = items.map((p) => ({
+      category: state.currentCategory,
+      group: state.currentGroup,
+      path: p,
+      url: absUrl(p),
+    }));
   }
-  $("#error").classList.remove("show");
-  renderMain();
+
+  state.filtered = list;
+  renderGrid(list);
+  renderStatus(list.length);
 }
 
-async function boot() {
-  $("#repoBtn").setAttribute("href", repoUrlFromPages());
+function openModalByPath(path) {
+  // Prefer current filtered list order for navigation
+  const idx = state.filtered.findIndex((x) => x.path === path);
+  state.modalIndex = idx >= 0 ? idx : 0;
+  showModal();
+}
 
-  $("#langBtn").addEventListener("click", () => setLang(state.lang === "zh" ? "en" : "zh"));
-  $("#search").addEventListener("input", (e) => {
-    state.query = e.target.value || "";
-    render();
-  });
+function showModal() {
+  const modal = $("modal");
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  syncModal();
+}
 
-  $("#retryBtn").addEventListener("click", async () => {
+function closeModal() {
+  const modal = $("modal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function syncModal() {
+  const it = state.filtered[state.modalIndex];
+  if (!it) return;
+
+  $("modalImg").src = it.url;
+  $("modalPath").textContent = it.path;
+  $("modalMeta").textContent = `${it.category}${it.group ? ` / ${it.group}` : ""}`;
+  $("openBtn").href = it.url;
+
+  // Copy
+  $("copyBtn").onclick = async () => {
     try {
-      $("#error").classList.remove("show");
-      const m = await loadManifest();
-      state.manifest = normalizeManifest(m);
-      setCategory(state.activeCategory);
-    } catch (err) {
-      $("#error").classList.add("show");
-    }
-  });
-
-  // Modal
-  $("#modalClose").addEventListener("click", closeModal);
-  $("#modalBackdrop").addEventListener("click", closeModal);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-  });
-
-  $("#copyBtn").addEventListener("click", async () => {
-    const v = $("#modalLink").value;
-    try {
-      await navigator.clipboard.writeText(v);
-      toast(t("copied"));
+      await navigator.clipboard.writeText(it.url);
+      $("copyBtn").textContent = "Copied ✓";
+      setTimeout(() => ($("copyBtn").textContent = text("copy")), 900);
     } catch {
       // fallback
-      $("#modalLink").select();
-      document.execCommand("copy");
-      toast(t("copied"));
+      prompt("Copy this link:", it.url);
     }
-  });
-
-  $("#openBtn").addEventListener("click", () => {
-    window.open($("#modalLink").value, "_blank", "noopener,noreferrer");
-  });
-
-  try {
-    const m = await loadManifest();
-    state.manifest = normalizeManifest(m);
-    setCategory("avatars");
-  } catch (err) {
-    state.manifest = null;
-  }
-
-  render();
+  };
 }
 
-boot();
+function prev() {
+  if (!state.filtered.length) return;
+  state.modalIndex = (state.modalIndex - 1 + state.filtered.length) % state.filtered.length;
+  syncModal();
+}
+function next() {
+  if (!state.filtered.length) return;
+  state.modalIndex = (state.modalIndex + 1) % state.filtered.length;
+  syncModal();
+}
+
+function bindEvents() {
+  $("search").addEventListener("input", () => renderAll());
+  $("langBtn").onclick = () => {
+    state.lang = state.lang === "en" ? "zh" : "en";
+    renderAll();
+  };
+
+  $("modalBackdrop").onclick = closeModal;
+  $("closeBtn").onclick = closeModal;
+  $("prevBtn").onclick = prev;
+  $("nextBtn").onclick = next;
+
+  window.addEventListener("keydown", (e) => {
+    const modalOpen = $("modal").classList.contains("show");
+    if (!modalOpen) return;
+    if (e.key === "Escape") closeModal();
+    if (e.key === "ArrowLeft") prev();
+    if (e.key === "ArrowRight") next();
+  });
+}
+
+(async function init() {
+  try {
+    bindEvents();
+    await loadManifest();
+    renderAll();
+  } catch (e) {
+    $("status").textContent = "Load failed";
+    $("grid").innerHTML = `<div class="empty">Manifest load failed. Check <span class="mono">/data/manifest.json</span>.</div>`;
+    console.error(e);
+  }
+})();
