@@ -1,240 +1,227 @@
-:root{
-  --bg1:#05060a;
-  --bg2:#0a0b12;
-  --glass: rgba(255,255,255,.06);
-  --glass2: rgba(255,255,255,.10);
-  --line: rgba(255,255,255,.10);
-  --text: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.62);
-  --shadow: 0 18px 60px rgba(0,0,0,.55);
-  --radius: 22px;
-}
+(() => {
+  const $ = (s) => document.querySelector(s);
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  color:var(--text);
-  background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(168,85,247,.35), transparent 60%),
-    radial-gradient(1000px 600px at 80% 20%, rgba(34,211,238,.25), transparent 60%),
-    radial-gradient(900px 600px at 60% 85%, rgba(236,72,153,.20), transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg2));
-  overflow:hidden; /* 整页不出现滚动条 */
-}
+  // ✅ 自动适配：无论你 Pages 是 /assets/ 还是自定义域名，都不会错
+  const BASE_URL = new URL("./", window.location.href); // e.g. https://byshelby.github.io/assets/
+  const MANIFEST_URL = new URL("data/manifest.json", BASE_URL).toString();
 
-.wrap{
-  width:min(1180px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 28px 0 40px;
-}
+  // 你的 GitHub 仓库信息（Raw 链接需要）
+  const OWNER = "byShelby";
+  const REPO  = "assets";
+  const BRANCH = "main";
 
-.top{
-  position: sticky;
-  top:0;
-  z-index:10;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding: 16px 20px;
-  backdrop-filter: blur(18px);
-  background: linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,.06));
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
+  const i18n = {
+    zh: {
+      title: "你的资源库",
+      subtitle: "干净、可复制直链、可预览。",
+      searchPH: "搜索：avatar / icon / photo",
+      empty: "这个分类还没有资源",
+      copied: "已复制",
+      copyPages: "复制 Pages 直链",
+      copyRaw: "复制 Raw 直链",
+      open: "打开",
+      manifestFail: "资源索引加载失败"
+    },
+    en: {
+      title: "Asset Library",
+      subtitle: "Clean. Copyable links. Previewable.",
+      searchPH: "Search: avatar / icon / photo",
+      empty: "No assets in this category",
+      copied: "Copied",
+      copyPages: "Copy Pages Link",
+      copyRaw: "Copy Raw Link",
+      open: "Open",
+      manifestFail: "Manifest load failed"
+    }
+  };
 
-.brand{display:flex; align-items:center; gap:10px}
-.dot{width:10px;height:10px;border-radius:999px;background:rgba(167,139,250,.95);box-shadow:0 0 14px rgba(167,139,250,.75)}
-.name{font-weight:700; letter-spacing:.4px}
-.tag{
-  font-size:12px;
-  color:var(--muted);
-  padding: 4px 10px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:999px;
-  background: rgba(255,255,255,.04);
-}
+  let lang = "zh";
 
-.actions{display:flex; gap:10px; align-items:center}
-.pill{
-  appearance:none;
-  border:none;
-  color:var(--text);
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  padding: 8px 12px;
-  border-radius:999px;
-  text-decoration:none;
-  cursor:pointer;
-  transition: transform .12s ease, background .12s ease;
-}
-.pill:hover{transform: translateY(-1px); background: rgba(255,255,255,.09)}
+  const repoBtn = $("#repoBtn");
+  repoBtn.href = `https://github.com/${OWNER}/${REPO}`;
 
-.hero{padding: 18px 0 18px}
-h1{margin:0; font-size:40px; letter-spacing:-.6px}
-.muted{margin:8px 0 0; color:var(--muted)}
+  const langBtn = $("#langBtn");
+  langBtn.addEventListener("click", () => {
+    lang = (lang === "zh") ? "en" : "zh";
+    langBtn.textContent = (lang === "zh") ? "EN" : "中文";
+    applyLang();
+    render(lastManifest);
+  });
 
-.searchRow{
-  margin-top:16px;
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-#q{
-  width: min(820px, 100%);
-  height: 46px;
-  border-radius: 999px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: var(--text);
-  outline:none;
-  padding: 0 16px;
-}
-#q::placeholder{color: rgba(255,255,255,.45)}
-.status{color: var(--muted); font-size:13px}
+  function applyLang(){
+    $("#title").textContent = i18n[lang].title;
+    $("#subtitle").textContent = i18n[lang].subtitle;
+    $("#q").placeholder = i18n[lang].searchPH;
+    $("#copyPages").textContent = i18n[lang].copyPages;
+    $("#copyRaw").textContent = i18n[lang].copyRaw;
+    $("#openNew").textContent = i18n[lang].open;
+  }
+  applyLang();
 
-.grid{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  height: calc(100vh - 210px);
-  overflow:auto;
-  padding-right: 6px;
-  scrollbar-width: none;          /* Firefox 隐藏滚动条 */
-}
-.grid::-webkit-scrollbar{display:none}  /* Chrome/Safari 隐藏滚动条 */
+  function pagesLink(path){
+    // ✅ 永远正确：用 BASE_URL 拼
+    return new URL(path, BASE_URL).toString();
+  }
+  function rawLink(path){
+    // ✅ 自动生成 Raw：无需你手动编辑
+    return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;
+  }
 
-.card{
-  border-radius: var(--radius);
-  background: var(--glass);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  min-height: 220px;
-}
+  async function copy(text){
+    await navigator.clipboard.writeText(text);
+  }
 
-.cardHead{
-  padding: 14px 14px 10px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap: 12px;
-}
-.cardTitle{font-weight:700}
-.cardSub{font-size:12px; color: var(--muted); margin-top:4px}
+  // Modal
+  const modal = $("#modal");
+  const modalImg = $("#modalImg");
+  const modalName = $("#modalName");
+  const modalPath = $("#modalPath");
+  const openNew = $("#openNew");
+  const copyPagesBtn = $("#copyPages");
+  const copyRawBtn = $("#copyRaw");
 
-.badge{
-  font-size:12px;
-  color: rgba(255,255,255,.78);
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:999px;
-  padding: 4px 10px;
-  white-space:nowrap;
-}
+  function openModal(assetPath){
+    const pUrl = pagesLink(assetPath);
+    const rUrl = rawLink(assetPath);
 
-.thumbGrid{
-  padding: 12px 14px 16px;
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  overflow:auto;
-  scrollbar-width:none;
-}
-.thumbGrid::-webkit-scrollbar{display:none}
+    modal.setAttribute("aria-hidden", "false");
+    modalImg.src = pUrl;
+    modalName.textContent = assetPath.split("/").pop();
+    modalPath.textContent = assetPath;
 
-.thumb{
-  position:relative;
-  width:100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(0,0,0,.25);
-  cursor:pointer;
-  transition: transform .12s ease, border-color .12s ease;
-}
-.thumb:hover{transform: translateY(-2px); border-color: rgba(255,255,255,.20)}
-.thumb img{
-  width:100%;
-  height:100%;
-  object-fit: cover;
-  display:block;
-}
+    openNew.href = pUrl;
 
-.empty{
-  padding: 14px;
-  color: var(--muted);
-  font-size: 13px;
-}
+    copyPagesBtn.onclick = async () => {
+      await copy(pUrl);
+      copyPagesBtn.textContent = i18n[lang].copied;
+      setTimeout(()=> copyPagesBtn.textContent = i18n[lang].copyPages, 900);
+    };
+    copyRawBtn.onclick = async () => {
+      await copy(rUrl);
+      copyRawBtn.textContent = i18n[lang].copied;
+      setTimeout(()=> copyRawBtn.textContent = i18n[lang].copyRaw, 900);
+    };
+  }
+  function closeModal(){
+    modal.setAttribute("aria-hidden", "true");
+    modalImg.src = "";
+  }
+  $("#modalClose").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close) closeModal();
+  });
+  window.addEventListener("keydown", (e)=> {
+    if (e.key === "Escape") closeModal();
+  });
 
-.modal{position:fixed; inset:0; display:none}
-.modal[aria-hidden="false"]{display:block}
-.modalBackdrop{position:absolute; inset:0; background: rgba(0,0,0,.55); backdrop-filter: blur(8px)}
-.modalCard{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform: translate(-50%, -50%);
-  width: min(980px, calc(100% - 40px));
-  border-radius: 22px;
-  background: rgba(15,16,22,.72);
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 30px 110px rgba(0,0,0,.65);
-  overflow:hidden;
-}
-.modalTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding: 14px 16px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.modalName{font-weight:700}
-.modalPath{font-size:12px; color: var(--muted); margin-top:2px}
-.iconBtn{
-  border:none;
-  background: rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.12);
-  color:var(--text);
-  border-radius: 12px;
-  width:38px;height:38px;
-  cursor:pointer;
-}
-.modalBody{
-  padding: 14px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background: rgba(0,0,0,.18);
-}
-.modalBody img{
-  max-width:100%;
-  max-height: 62vh;
-  border-radius: 18px;
-  border:1px solid rgba(255,255,255,.12);
-}
-.modalBottom{
-  padding: 14px 16px;
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  border-top:1px solid rgba(255,255,255,.08);
-}
-.btn{
-  border:none;
-  cursor:pointer;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.10);
-  border:1px solid rgba(255,255,255,.14);
-  color:var(--text);
-  text-decoration:none;
-}
-.btn:hover{background: rgba(255,255,255,.14)}
-.btn.ghost{background: transparent}
-@media (max-width: 980px){
-  .grid{grid-template-columns:1fr}
-}
+  // Render
+  const grid = $("#grid");
+  const q = $("#q");
+  const status = $("#status");
+
+  let lastManifest = null;
+
+  q.addEventListener("input", () => render(lastManifest));
+
+  function normalizeList(groups){
+    // groups: {root:[...], people:[...]} -> flatten with group name
+    const out = [];
+    for (const [group, arr] of Object.entries(groups || {})){
+      (arr || []).forEach(p => out.push({ group, path: p }));
+    }
+    return out;
+  }
+
+  function render(manifest){
+    if(!manifest) return;
+    const kw = (q.value || "").trim().toLowerCase();
+
+    grid.innerHTML = "";
+
+    const cats = manifest.categories || {};
+    const entries = Object.entries(cats);
+
+    for (const [catName, catObj] of entries){
+      const groups = catObj.groups || {};
+      const list = normalizeList(groups);
+
+      const filtered = kw
+        ? list.filter(x => (x.path + " " + x.group + " " + catName).toLowerCase().includes(kw))
+        : list;
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const head = document.createElement("div");
+      head.className = "cardHead";
+
+      const left = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "cardTitle";
+      title.textContent = catName[0].toUpperCase() + catName.slice(1);
+
+      const sub = document.createElement("div");
+      sub.className = "cardSub";
+      sub.textContent = `${catObj.total || 0}`;
+
+      left.appendChild(title);
+      left.appendChild(sub);
+
+      const badge = document.createElement("div");
+      badge.className = "badge";
+      badge.textContent = "root"; // 你现在不想复杂分组，就显示 root（后面你要分类我再给你升级）
+
+      head.appendChild(left);
+      head.appendChild(badge);
+
+      card.appendChild(head);
+
+      if (filtered.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = i18n[lang].empty;
+        card.appendChild(empty);
+      } else {
+        const tg = document.createElement("div");
+        tg.className = "thumbGrid";
+
+        // 展示前 12 个缩略图（避免页面炸裂）；搜索时也是这样
+        const show = filtered.slice(0, 12);
+
+        for (const item of show){
+          const btn = document.createElement("div");
+          btn.className = "thumb";
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.src = pagesLink(item.path);
+          img.alt = item.path;
+          btn.appendChild(img);
+          btn.addEventListener("click", () => openModal(item.path));
+          tg.appendChild(btn);
+        }
+        card.appendChild(tg);
+      }
+
+      grid.appendChild(card);
+    }
+
+    status.textContent = "";
+  }
+
+  async function main(){
+    status.textContent = "Loading…";
+    try{
+      const res = await fetch(MANIFEST_URL, { cache: "no-store" });
+      if(!res.ok) throw new Error("manifest http " + res.status);
+      const manifest = await res.json();
+      lastManifest = manifest;
+      status.textContent = "";
+      render(manifest);
+    }catch(err){
+      console.error(err);
+      status.textContent = i18n[lang].manifestFail + " · " + MANIFEST_URL;
+    }
+  }
+
+  main();
+})();
