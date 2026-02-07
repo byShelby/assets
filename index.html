@@ -1,73 +1,97 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asset Library</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Asset Library</title>
+    <link rel="stylesheet" href="./styles.css?v=1" />
+  </head>
+  <body>
+    <div class="bg"></div>
 
-<body>
-  <div class="bg" aria-hidden="true"></div>
-  <div class="noise" aria-hidden="true"></div>
-
-  <header class="topbar">
-    <div class="brand">
-      <span class="dot" aria-hidden="true"></span>
-      <span class="brand-text">assets</span>
-      <span class="pill">GitHub Pages</span>
-    </div>
-
-    <div class="top-actions">
-      <button class="chip chip-fixed" id="langBtn" type="button" aria-label="Language">
-        <span class="chip-text" id="langLabel">EN</span>
-      </button>
-      <a class="chip" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
-    </div>
-  </header>
-
-  <!-- ✅ 关键：页面不滚动，内容在内部布局与内部滚动 -->
-  <main class="shell" id="app">
-    <section class="hero">
-      <h1 id="title">Asset Library</h1>
-      <p class="subtitle" id="subtitle">Search, preview, and copy direct links.</p>
-
-      <div class="searchbar">
-        <input id="searchInput" type="search" placeholder="Search: category / group / filename" autocomplete="off" />
-        <div class="status" id="statusPill">Ready</div>
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="pill">
+        <span class="dot"></span>
+        <span class="pill-title">assets</span>
+        <span class="pill-sub">GitHub Pages</span>
       </div>
-    </section>
 
-    <!-- ✅ 卡片区居中显示（不会跑到右边），内容超出由内部滚动处理 -->
-    <section class="cards" id="cards"></section>
-  </main>
+      <div class="topbar-actions">
+        <button id="langBtn" class="chip" type="button" aria-label="Language">
+          EN
+        </button>
+        <a
+          id="repoBtn"
+          class="chip"
+          href="#"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open Repo
+        </a>
+      </div>
+    </header>
 
-  <!-- Preview modal -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modal-backdrop" id="modalBackdrop"></div>
-    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalName">
-      <div class="modal-head">
-        <div class="modal-title">
-          <div id="modalName" class="mono">...</div>
-          <div class="muted mono" id="modalUrl">...</div>
+    <!-- Center Stage -->
+    <main class="stage">
+      <section class="hero">
+        <h1 id="title">Asset Library</h1>
+        <p id="subtitle" class="sub">
+          Search, preview, and copy direct links.
+        </p>
+
+        <div class="searchRow">
+          <div class="searchWrap">
+            <input
+              id="searchInput"
+              class="search"
+              type="text"
+              placeholder="Search: category / group / filename"
+              autocomplete="off"
+            />
+          </div>
+          <div id="statusPill" class="statusPill">Ready</div>
         </div>
-        <button class="iconbtn" id="modalClose" type="button" aria-label="Close">✕</button>
-      </div>
+      </section>
 
-      <div class="modal-body">
-        <img id="modalImg" alt="Preview" />
-      </div>
+      <section id="cards" class="cards" aria-live="polite">
+        <!-- cards rendered by app.js -->
+      </section>
+    </main>
 
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="btnCopy" type="button">Copy link</button>
-        <a class="btn" id="btnOpen" target="_blank" rel="noreferrer">Open</a>
-        <button class="btn btn-ghost" id="btnDone" type="button">Done</button>
+    <!-- Toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Preview Modal -->
+    <div id="modal" class="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true">
+        <div class="modal-top">
+          <div class="modal-meta">
+            <div id="modalName" class="modal-name">—</div>
+            <div id="modalPath" class="modal-path">—</div>
+          </div>
+          <button id="modalClose" class="iconBtn" type="button" aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <img id="modalImg" alt="" />
+        </div>
+
+        <div class="modal-actions">
+          <button id="copyBtn" class="btn" type="button">Copy link</button>
+          <a id="openBtn" class="btn ghost" href="#" target="_blank" rel="noreferrer">Open</a>
+          <button id="doneBtn" class="btn ghost" type="button">Done</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast" aria-live="polite"></div>
-
-  <script src="./app.js" defer></script>
-</body>
+    <script src="./app.js?v=1"></script>
+  </body>
 </html>
