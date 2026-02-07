@@ -102,8 +102,9 @@ body {
   align-content: start;
 
   /* ✅ 距离更合理：不要离搜索太远，也不会贴太近 */
-  padding: 84px 24px 40px;
+padding: 110px 24px 40px;   /* ✅ 整体下移，让视角居中 */
   row-gap: 14px;
+    align-content: center;      /* ✅ 把整组内容锁到视口中心 */
 }
 
 .hero {
