@@ -2,96 +2,77 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Asset Library</title>
-    <link rel="stylesheet" href="./styles.css?v=1" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
-    <div class="bg"></div>
 
-    <!-- Top Bar -->
-    <header class="topbar">
+  <body>
+    <div class="bg" aria-hidden="true"></div>
+
+    <div class="topbar">
       <div class="pill">
         <span class="dot"></span>
-        <span class="pill-title">assets</span>
-        <span class="pill-sub">GitHub Pages</span>
+        <div>
+          <div class="pill-title">assets</div>
+          <div class="pill-sub">GitHub Pages</div>
+        </div>
       </div>
 
       <div class="topbar-actions">
-        <button id="langBtn" class="chip" type="button" aria-label="Language">
-          EN
-        </button>
-        <a
-          id="repoBtn"
-          class="chip"
-          href="#"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Open Repo
-        </a>
+        <button id="langBtn" class="chip" type="button" aria-label="Language">EN</button>
+        <a class="chip" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
       </div>
-    </header>
+    </div>
 
-    <!-- Center Stage -->
     <main class="stage">
       <section class="hero">
         <h1 id="title">Asset Library</h1>
-        <p id="subtitle" class="sub">
-          Search, preview, and copy direct links.
-        </p>
+        <p class="sub" id="subtitle">Search, preview, and copy direct links.</p>
 
         <div class="searchRow">
           <div class="searchWrap">
             <input
-              id="searchInput"
+              id="search"
               class="search"
               type="text"
               placeholder="Search: category / group / filename"
               autocomplete="off"
             />
           </div>
-          <div id="statusPill" class="statusPill">Ready</div>
+          <div class="statusPill" id="status">Loading…</div>
         </div>
       </section>
 
-      <section id="cards" class="cards" aria-live="polite">
-        <!-- cards rendered by app.js -->
-      </section>
+      <section class="cards" id="cards"></section>
     </main>
 
-    <!-- Toast -->
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast">Copied</div>
 
     <!-- Preview Modal -->
-    <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal" id="modal" aria-hidden="true">
       <div class="modal-backdrop" id="modalBackdrop"></div>
-      <div class="modal-panel" role="dialog" aria-modal="true">
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Preview">
         <div class="modal-top">
           <div class="modal-meta">
-            <div id="modalName" class="modal-name">—</div>
-            <div id="modalPath" class="modal-path">—</div>
+            <div class="modal-name" id="modalName">—</div>
+            <div class="modal-path" id="modalPath">—</div>
           </div>
-          <button id="modalClose" class="iconBtn" type="button" aria-label="Close">
-            ✕
-          </button>
+          <button class="iconBtn" id="modalClose" type="button" aria-label="Close">✕</button>
         </div>
 
         <div class="modal-body">
-          <img id="modalImg" alt="" />
+          <img id="modalImg" alt="preview" />
         </div>
 
         <div class="modal-actions">
-          <button id="copyBtn" class="btn" type="button">Copy link</button>
-          <a id="openBtn" class="btn ghost" href="#" target="_blank" rel="noreferrer">Open</a>
-          <button id="doneBtn" class="btn ghost" type="button">Done</button>
+          <button class="btn ghost" id="copyBtn" type="button">Copy link</button>
+          <a class="btn ghost" id="openBtn" href="#" target="_blank" rel="noreferrer">Open</a>
+          <button class="btn" id="doneBtn" type="button">Done</button>
         </div>
       </div>
     </div>
 
-    <script src="./app.js?v=1"></script>
+    <script src="./app.js"></script>
   </body>
 </html>
