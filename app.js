@@ -1,4 +1,3 @@
-/* ========= Helpers ========= */
 const $ = (s) => document.querySelector(s);
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, m => ({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -13,7 +12,6 @@ function toast(msg, type="ok") {
   setTimeout(() => el.classList.remove("show"), 1200);
 }
 
-/* ========= i18n ========= */
 const i18n = {
   en: {
     title: "Asset Library",
@@ -58,14 +56,12 @@ const state = {
   query: ""
 };
 
-/* ========= Repo link ========= */
 (function initRepoLink(){
   const owner = location.hostname.split(".")[0];
   const repo = location.pathname.split("/").filter(Boolean)[0] || "assets";
   $("#repoBtn").href = `https://github.com/${owner}/${repo}`;
 })();
 
-/* ========= Language ========= */
 function applyLang(){
   const t = i18n[state.lang];
   $("#title").textContent = t.title;
@@ -75,7 +71,6 @@ function applyLang(){
   $("#copyBtn").textContent = t.copy;
   $("#openBtn").textContent = t.open;
   $("#doneBtn").textContent = t.done;
-
   $("#langBtn").textContent = state.lang.toUpperCase();
 }
 
@@ -85,25 +80,21 @@ $("#langBtn").addEventListener("click", () => {
   render();
 });
 
-/* ========= Manifest load ========= */
 async function loadManifest(){
   const v = Date.now();
   const url = `./data/manifest.json?v=${v}`;
   $("#status").textContent = " ";
-
   try {
     const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    state.manifest = json;
+    state.manifest = await res.json();
     $("#status").textContent = " ";
-  } catch (e) {
+  } catch {
     state.manifest = null;
     $("#status").textContent = i18n[state.lang].loadFail;
   }
 }
 
-/* ========= Render ========= */
 function getCategoryLabel(key){
   const t = i18n[state.lang];
   if(key === "avatars") return t.avatars;
@@ -117,6 +108,40 @@ function matchQuery(path, cat, group){
   const q = state.query.toLowerCase().trim();
   const hay = `${cat}/${group}/${path}`.toLowerCase();
   return hay.includes(q);
+}
+
+/* ✅ The key: force wheel scroll to stay inside .grid */
+function lockScrollToGrid(grid){
+  // Wheel (trackpad/mouse)
+  grid.addEventListener("wheel", (e) => {
+    // if grid can scroll, always consume the event and scroll grid manually
+    if (grid.scrollHeight <= grid.clientHeight) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // vertical scroll
+    grid.scrollTop += e.deltaY;
+  }, { passive: false });
+
+  // Touch (mobile)
+  let startY = 0;
+  grid.addEventListener("touchstart", (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  grid.addEventListener("touchmove", (e) => {
+    if (grid.scrollHeight <= grid.clientHeight) return;
+    if (!e.touches || !e.touches[0]) return;
+
+    const dy = startY - e.touches[0].clientY;
+    // prevent page from moving
+    e.preventDefault();
+    e.stopPropagation();
+    grid.scrollTop += dy;
+    startY = e.touches[0].clientY;
+  }, { passive: false });
 }
 
 function render(){
@@ -186,26 +211,9 @@ function render(){
       groupRow.appendChild(btn);
     }
 
-    // grid (scrollable)
     const grid = document.createElement("div");
     grid.className = "grid";
-
-    // ✅ JS insurance: when scrolling inside grid, prevent page scroll chaining
-    grid.addEventListener("wheel", (e) => {
-      // If grid can scroll, keep the wheel inside it
-      const canScroll = grid.scrollHeight > grid.clientHeight;
-      if (!canScroll) return;
-
-      const atTop = grid.scrollTop <= 0;
-      const atBottom = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1;
-
-      // If trying to scroll past boundaries, prevent bubbling to page
-      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
-        e.preventDefault();
-      }
-      // Always stop it from reaching body (Mac trackpad feels better)
-      e.stopPropagation();
-    }, { passive: false });
+    lockScrollToGrid(grid); // ✅ apply lock
 
     const list = (groups[active] || []).slice();
     const filtered = list.filter(p => matchQuery(p, cat, active));
@@ -246,13 +254,11 @@ function render(){
   }
 }
 
-/* ========= Search ========= */
 $("#search").addEventListener("input", (e) => {
   state.query = e.target.value || "";
   render();
 });
 
-/* ========= Modal ========= */
 function openModal(rel){
   const t = i18n[state.lang];
   const modal = $("#modal");
@@ -261,7 +267,6 @@ function openModal(rel){
 
   $("#modalName").textContent = rel.split("/").pop();
   $("#modalPath").textContent = rel;
-
   img.src = url;
   $("#openBtn").href = url;
 
@@ -269,7 +274,6 @@ function openModal(rel){
   $("#copyBtn").onclick = async () => {
     const btn = $("#copyBtn");
     const originalText = t.copy;
-
     const setBtn = (text) => { btn.textContent = text; };
 
     try {
@@ -277,7 +281,7 @@ function openModal(rel){
       setBtn(state.lang === "zh" ? "已复制 ✓" : "Copied ✓");
       toast(t.copied, "ok");
       setTimeout(() => setBtn(originalText), 900);
-    } catch (e) {
+    } catch {
       try {
         const ta = document.createElement("textarea");
         ta.value = url;
@@ -315,7 +319,6 @@ window.addEventListener("keydown", (e) => {
   if(e.key === "Escape") closeModal();
 });
 
-/* ========= Boot ========= */
 (async function boot(){
   state.lang = "en";
   applyLang();
