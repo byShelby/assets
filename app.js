@@ -13,7 +13,7 @@ function toast(msg, type="ok") {
   setTimeout(() => el.classList.remove("show"), 1200);
 }
 
-/* ========= i18n (NO extra testing text) ========= */
+/* ========= i18n ========= */
 const i18n = {
   en: {
     title: "Asset Library",
@@ -23,7 +23,6 @@ const i18n = {
     avatars: "Avatars",
     icons: "Icons",
     photos: "Photos",
-    groupRoot: "root",
     empty: "No files in this group.",
     loadFail: "Load failed",
     manifestFail: "Manifest load failed. Check /data/manifest.json.",
@@ -41,7 +40,6 @@ const i18n = {
     avatars: "头像",
     icons: "图标",
     photos: "照片",
-    groupRoot: "root",
     empty: "这个分组暂无文件。",
     loadFail: "加载失败",
     manifestFail: "资源索引加载失败：请检查 /data/manifest.json",
@@ -62,8 +60,6 @@ const state = {
 
 /* ========= Repo link ========= */
 (function initRepoLink(){
-  // Best effort: build repo URL from current host path
-  // Example: https://byshelby.github.io/assets/ -> repo likely https://github.com/byShelby/assets
   const owner = location.hostname.split(".")[0];
   const repo = location.pathname.split("/").filter(Boolean)[0] || "assets";
   $("#repoBtn").href = `https://github.com/${owner}/${repo}`;
@@ -116,11 +112,6 @@ function getCategoryLabel(key){
   return key;
 }
 
-function normalizeGroupName(g){
-  if(!g) return "root";
-  return g;
-}
-
 function matchQuery(path, cat, group){
   if(!state.query) return true;
   const q = state.query.toLowerCase().trim();
@@ -161,49 +152,60 @@ function render(){
     const active = state.activeGroup[cat] || (groupNames[0] || "root");
     state.activeGroup[cat] = active;
 
-    // filter count for badge (optional)
     const total = info.total ?? 0;
 
     const card = document.createElement("div");
     card.className = "card";
 
+    const inner = document.createElement("div");
+    inner.className = "card-inner";
+
     const head = document.createElement("div");
-    head.className = "card-inner";
+    head.className = "card-head";
     head.innerHTML = `
-      <div class="card-head">
-        <div>
-          <div class="card-title">${escapeHtml(getCategoryLabel(cat))}</div>
-          <div class="card-meta">${escapeHtml(active)}</div>
-        </div>
-        <span class="badge">${total}</span>
+      <div>
+        <div class="card-title">${escapeHtml(getCategoryLabel(cat))}</div>
+        <div class="card-meta">${escapeHtml(active)}</div>
       </div>
+      <span class="badge">${total}</span>
     `;
 
-    // group buttons
     const groupRow = document.createElement("div");
     groupRow.className = "groupRow";
 
-    // ensure root always present if files exist under root
     const sortedGroups = groupNames.length ? groupNames.slice().sort() : ["root"];
-
     for(const g of sortedGroups){
-      const g2 = normalizeGroupName(g);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "groupBtn" + (g2 === active ? " active" : "");
-      btn.textContent = g2;
+      btn.className = "groupBtn" + (g === active ? " active" : "");
+      btn.textContent = g;
       btn.addEventListener("click", () => {
-        state.activeGroup[cat] = g2;
+        state.activeGroup[cat] = g;
         render();
       });
       groupRow.appendChild(btn);
     }
 
-    head.appendChild(groupRow);
-
-    // grid
+    // grid (scrollable)
     const grid = document.createElement("div");
     grid.className = "grid";
+
+    // ✅ JS insurance: when scrolling inside grid, prevent page scroll chaining
+    grid.addEventListener("wheel", (e) => {
+      // If grid can scroll, keep the wheel inside it
+      const canScroll = grid.scrollHeight > grid.clientHeight;
+      if (!canScroll) return;
+
+      const atTop = grid.scrollTop <= 0;
+      const atBottom = grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1;
+
+      // If trying to scroll past boundaries, prevent bubbling to page
+      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+        e.preventDefault();
+      }
+      // Always stop it from reaching body (Mac trackpad feels better)
+      e.stopPropagation();
+    }, { passive: false });
 
     const list = (groups[active] || []).slice();
     const filtered = list.filter(p => matchQuery(p, cat, active));
@@ -212,8 +214,8 @@ function render(){
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = t.empty;
-      head.appendChild(empty);
-    }else{
+      grid.appendChild(empty);
+    } else {
       for(const rel of filtered){
         const tile = document.createElement("div");
         tile.className = "tile";
@@ -222,8 +224,6 @@ function render(){
         const img = document.createElement("img");
         img.loading = "lazy";
         img.alt = rel;
-
-        // Use Pages direct URL (stable)
         img.src = `./${rel}`;
 
         const hint = document.createElement("div");
@@ -236,11 +236,12 @@ function render(){
 
         grid.appendChild(tile);
       }
-
-      head.appendChild(grid);
     }
 
-    card.appendChild(head);
+    inner.appendChild(head);
+    inner.appendChild(groupRow);
+    inner.appendChild(grid);
+    card.appendChild(inner);
     root.appendChild(card);
   }
 }
@@ -256,7 +257,6 @@ function openModal(rel){
   const t = i18n[state.lang];
   const modal = $("#modal");
   const img = $("#modalImg");
-
   const url = new URL(rel, location.href).toString();
 
   $("#modalName").textContent = rel.split("/").pop();
@@ -265,7 +265,6 @@ function openModal(rel){
   img.src = url;
   $("#openBtn").href = url;
 
-  // Copy feedback: toast + button temporary text
   $("#copyBtn").textContent = t.copy;
   $("#copyBtn").onclick = async () => {
     const btn = $("#copyBtn");
@@ -279,7 +278,6 @@ function openModal(rel){
       toast(t.copied, "ok");
       setTimeout(() => setBtn(originalText), 900);
     } catch (e) {
-      // fallback
       try {
         const ta = document.createElement("textarea");
         ta.value = url;
@@ -319,16 +317,8 @@ window.addEventListener("keydown", (e) => {
 
 /* ========= Boot ========= */
 (async function boot(){
-  // default language: keep EN first (no layout jump)
   state.lang = "en";
   applyLang();
-
   await loadManifest();
-
-  // Make sure root group exists if manifest groups empty (still render)
-  for(const k of ["avatars","icons","photos"]){
-    if(!state.activeGroup[k]) state.activeGroup[k] = "root";
-  }
-
   render();
 })();
