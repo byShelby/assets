@@ -1,46 +1,66 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>assets</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Assets</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="badge"><span class="dot"></span><span>assets</span><span style="opacity:.65">GitHub Pages</span></div>
-      <div style="display:flex;gap:10px">
-        <button id="langBtn" class="btn">EN</button>
-        <button id="btnRepo" class="btn">Open Repo</button>
+  <div class="bg"></div>
+
+  <header class="top">
+    <div class="brand">
+      <div class="pill"><span class="dot"></span><span>assets</span><span class="sub">GitHub Pages</span></div>
+      <div class="actions">
+        <button id="langBtn" class="btn ghost" type="button">EN</button>
+        <a id="repoBtn" class="btn" target="_blank" rel="noreferrer">Open Repo</a>
       </div>
     </div>
 
-    <div class="h1" id="title">你的资源库</div>
-    <p class="p" id="desc"></p>
+    <h1 class="title" id="titleText">你的资源库</h1>
 
-    <div class="searchRow">
-      <input id="q" class="search" placeholder="" />
+    <div class="searchWrap">
+      <input id="q" class="search" placeholder="搜索：avatar / icon / photo / 文件名" autocomplete="off" />
     </div>
+  </header>
 
-    <div id="cards" class="grid3"></div>
+  <main class="wrap">
+    <section class="grid" id="cards"></section>
+  </main>
+
+  <!-- Gallery Modal -->
+  <div class="modal" id="galleryModal" aria-hidden="true">
+    <div class="modalTop">
+      <div class="modalTitle">
+        <span id="modalCategory">Avatars</span>
+        <span class="count" id="modalCount"></span>
+      </div>
+      <div class="modalActions">
+        <input id="modalSearch" class="modalSearch" placeholder="在当前分类搜索…" autocomplete="off" />
+        <button class="btn ghost" id="closeGallery" type="button">Close</button>
+      </div>
+    </div>
+    <div class="modalBody noScrollbars" id="galleryGrid"></div>
   </div>
 
-  <dialog id="dlg">
-    <div class="modalBar">
-      <div class="modalUrl" id="modalUrl"></div>
-      <div class="modalBtns">
-        <button class="navBtn" id="btnPrev">Prev</button>
-        <button class="navBtn" id="btnNext">Next</button>
-        <button class="navBtn" id="btnCopy">Copy</button>
-        <button class="navBtn" id="btnClose">Close</button>
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightboxInner">
+      <img id="lightboxImg" alt="" />
+      <div class="lightboxBar">
+        <div class="lightboxName" id="lightboxName"></div>
+        <div class="lightboxBtns">
+          <button class="btn ghost" id="copyLinkBtn" type="button">Copy link</button>
+          <a class="btn ghost" id="openImgBtn" target="_blank" rel="noreferrer">Open</a>
+          <button class="btn" id="closeLightbox" type="button">Done</button>
+        </div>
       </div>
     </div>
-    <div class="modalBody">
-      <img id="modalImg" class="modalImg" alt="" />
-    </div>
-  </dialog>
+  </div>
 
-  <script src="app.js"></script>
+  <div class="toast" id="toast"></div>
+
+  <script src="./app.js"></script>
 </body>
 </html>
