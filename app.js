@@ -26,6 +26,9 @@
   let currentItem = null;
   let toastTimer = null;
 
+  // ✅ Track selected thumbnail element
+  let selectedThumbEl = null;
+
   const I18N = {
     en: {
       title: "Asset Library",
@@ -39,7 +42,8 @@
       done: "Done",
       copied: "Link copied",
       copyFail: "Copy failed",
-      empty: "No files in this group."
+      empty: "No files in this group.",
+      imgFail: "Image failed to load"
     },
     zh: {
       title: "资源库",
@@ -53,7 +57,8 @@
       done: "完成",
       copied: "链接已复制",
       copyFail: "复制失败",
-      empty: "此分组暂无文件。"
+      empty: "此分组暂无文件。",
+      imgFail: "图片加载失败"
     }
   };
 
@@ -82,11 +87,18 @@
   }
 
   function absUrl(path) {
-    // manifest 里是 "avatars/avatar-1.jpg" 这种
     return baseUrl() + path.replace(/^\/+/, "");
   }
 
+  // ✅ Always keep toast above modal (even if CSS got messy later)
+  function ensureToastOnTop() {
+    if (!elToast) return;
+    elToast.style.position = "fixed";
+    elToast.style.zIndex = "9999";
+  }
+
   function toast(msg, ok = true) {
+    ensureToastOnTop();
     elToast.textContent = msg;
     elToast.classList.add("show");
     elToast.setAttribute("data-ok", ok ? "1" : "0");
@@ -122,13 +134,38 @@
     }
   }
 
-  function openModal(item) {
+  // ✅ helpers for selected state
+  function clearSelectedThumb() {
+    if (selectedThumbEl) selectedThumbEl.classList.remove("selected");
+    selectedThumbEl = null;
+  }
+  function setSelectedThumb(el) {
+    if (!el) return;
+    clearSelectedThumb();
+    selectedThumbEl = el;
+    selectedThumbEl.classList.add("selected");
+  }
+
+  function openModal(item, thumbEl) {
     currentItem = item;
+
+    // ✅ selected feedback
+    if (thumbEl) setSelectedThumb(thumbEl);
+
     modal.classList.add("show");
     modal.setAttribute("aria-hidden", "false");
 
     const url = absUrl(item.path);
+
+    // ✅ modal image load feedback
+    modalImg.onerror = () => {
+      toast(t("imgFail"), false);
+    };
+    modalImg.onload = () => {
+      // no toast, keep clean
+    };
     modalImg.src = url;
+
     modalName.textContent = item.name;
     modalPath.textContent = item.path;
     openBtn.href = url;
@@ -138,6 +175,9 @@
     modal.classList.remove("show");
     modal.setAttribute("aria-hidden", "true");
     currentItem = null;
+
+    // ✅ clear selected when closing modal
+    clearSelectedThumb();
   }
 
   function normalizeQuery(q) {
@@ -175,7 +215,6 @@
       if (!gmap.has(it.group)) gmap.set(it.group, []);
       gmap.get(it.group).push(it);
     }
-    // stable order for UI
     return map;
   }
 
@@ -185,7 +224,6 @@
       if (cat === "icons") return "图标";
       if (cat === "photos") return "图片";
     }
-    // EN
     if (cat === "avatars") return "Avatars";
     if (cat === "icons") return "Icons";
     if (cat === "photos") return "Photos";
@@ -239,13 +277,31 @@
         thumb.className = "thumb";
         thumb.title = it.path;
 
+        // ✅ keyboard focus support (does not change layout)
+        thumb.tabIndex = 0;
+
         const img = document.createElement("img");
         img.loading = "lazy";
         img.src = it.url;
         img.alt = it.name;
 
+        // ✅ image fail feedback (non-intrusive)
+        img.onerror = () => {
+          // only show a toast if user is likely interacting (avoid spam)
+          // still: keep it simple
+          toast(t("imgFail"), false);
+        };
+
         thumb.appendChild(img);
-        thumb.addEventListener("click", () => openModal(it));
+
+        thumb.addEventListener("click", () => openModal(it, thumb));
+        thumb.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openModal(it, thumb);
+          }
+        });
+
         grid.appendChild(thumb);
       }
 
@@ -259,7 +315,6 @@
   }
 
   function pickMainGroup(groupsMap) {
-    // 优先 root，否则取第一个 group
     if (groupsMap.has("root")) return "root";
     const it = groupsMap.keys().next();
     return it.done ? "root" : it.value;
@@ -267,6 +322,7 @@
 
   function render() {
     elCards.innerHTML = "";
+    clearSelectedThumb(); // ✅ avoid stale selection after search/filter
 
     if (!manifest) return;
 
@@ -287,7 +343,9 @@
       const catObj = manifest.categories?.[cat] || { total: 0, groups: {} };
       const gmap = byCat.get(cat) || new Map();
 
-      const mainGroup = pickMainGroup(gmap.size ? gmap : new Map(Object.entries(catObj.groups || {})));
+      const mainGroup = pickMainGroup(
+        gmap.size ? gmap : new Map(Object.entries(catObj.groups || {}))
+      );
       const list = gmap.get(mainGroup) || [];
       const total = catObj.total || 0;
 
@@ -299,9 +357,10 @@
     try {
       elStatus.textContent = t("loading");
 
-      // Repo link: 当前仓库 GitHub 页面（可用则显示）
-      // 如果你在 Pages 里用的是 /assets/，这个 repo 链接不影响功能
-      elRepoBtn.href = "https://github.com/" + (location.hostname.split(".github.io")[0] || "byShelby") + "/assets";
+      elRepoBtn.href =
+        "https://github.com/" +
+        (location.hostname.split(".github.io")[0] || "byShelby") +
+        "/assets";
 
       const res = await fetch(MANIFEST_PATH, { cache: "no-store" });
       if (!res.ok) throw new Error("manifest http " + res.status);
@@ -312,8 +371,14 @@
     } catch (e) {
       console.error(e);
       elStatus.textContent = t("loadFailed");
-      // 页面还能显示基本框架，不会烂
-      manifest = manifest || { categories: { avatars: { total: 0, groups: {} }, icons: { total: 0, groups: {} }, photos: { total: 0, groups: {} } } };
+      manifest =
+        manifest || {
+          categories: {
+            avatars: { total: 0, groups: {} },
+            icons: { total: 0, groups: {} },
+            photos: { total: 0, groups: {} }
+          }
+        };
       render();
     }
   }
@@ -328,6 +393,7 @@
   modalBackdrop.addEventListener("click", closeModal);
   modalClose.addEventListener("click", closeModal);
   doneBtn.addEventListener("click", closeModal);
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModal();
   });
@@ -338,6 +404,7 @@
   });
 
   // init
+  ensureToastOnTop();
   setLang(lang);
   loadManifest();
 })();
