@@ -428,3 +428,7 @@ h1 {
   h1 { font-size: 44px; }
   .sub { font-size: 15px; }
 }
+/* ✅ Only align the 3 card frames (no other changes) */
+.cards { align-items: stretch; }            /* 三个卡片同一行等高对齐 */
+.card  { display: flex; flex-direction: column; }
+.cardHead { min-height: 76px; }             /* 统一卡头高度，避免顶部不齐 */
