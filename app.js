@@ -1,327 +1,285 @@
-const $ = (s) => document.querySelector(s);
-const escapeHtml = (s) => String(s).replace(/[&<>"']/g, m => ({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[m]));
+(() => {
+  const $ = (id) => document.getElementById(id);
 
-function toast(msg, type="ok") {
-  const el = $("#toast");
-  el.textContent = msg;
-  el.classList.remove("ok","err");
-  el.classList.add(type === "err" ? "err" : "ok");
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 1200);
-}
+  const grid = $("grid");
+  const q = $("q");
+  const status = $("status");
+  const repoBtn = $("repoBtn");
 
-const i18n = {
-  en: {
-    title: "Asset Library",
-    subtitle: "Search, preview, and copy direct links.",
-    searchPH: "Search: category / group / filename",
-    openRepo: "Open Repo",
-    avatars: "Avatars",
-    icons: "Icons",
-    photos: "Photos",
-    empty: "No files in this group.",
-    loadFail: "Load failed",
-    manifestFail: "Manifest load failed. Check /data/manifest.json.",
-    copy: "Copy link",
-    copied: "Copied",
-    open: "Open",
-    done: "Done",
-    copyFail: "Copy failed (permission)"
-  },
-  zh: {
-    title: "资源库",
-    subtitle: "搜索、预览并复制直链。",
-    searchPH: "搜索：分类 / 分组 / 文件名",
-    openRepo: "打开仓库",
-    avatars: "头像",
-    icons: "图标",
-    photos: "照片",
-    empty: "这个分组暂无文件。",
-    loadFail: "加载失败",
-    manifestFail: "资源索引加载失败：请检查 /data/manifest.json",
-    copy: "复制链接",
-    copied: "已复制",
-    open: "打开",
-    done: "完成",
-    copyFail: "复制失败（浏览器权限）"
+  const modal = $("modal");
+  const modalOverlay = $("modalOverlay");
+  const modalImg = $("modalImg");
+  const modalName = $("modalName");
+  const modalPath = $("modalPath");
+  const copyBtn = $("copyBtn");
+  const openBtn = $("openBtn");
+  const closeBtn = $("closeBtn");
+
+  const toast = $("toast");
+  const langBtn = $("langBtn");
+  const langLabel = $("langLabel");
+  const title = $("title");
+  const subtitle = $("subtitle");
+
+  // ===== Base URL (works on GitHub Pages subpath like /assets/) =====
+  const base = new URL("./", window.location.href); // ends with /assets/
+  const manifestURL = new URL("data/manifest.json", base);
+  const repoURL = (() => {
+    // Try to guess repo from location: https://username.github.io/repo/
+    // -> https://github.com/username/repo
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    // parts[0] should be repo name on GH pages (for project pages)
+    // host contains username.github.io
+    const user = window.location.hostname.split(".")[0];
+    const repo = parts[0] || "assets";
+    return `https://github.com/${user}/${repo}`;
+  })();
+  repoBtn.href = repoURL;
+
+  // cache-bust via ?v=xxx
+  const v = new URLSearchParams(location.search).get("v");
+  if (v) manifestURL.searchParams.set("v", v);
+
+  // ===== i18n =====
+  const I18N = {
+    EN: {
+      title: "Asset Library",
+      subtitle: "Search, preview, and copy direct links.",
+      searchPH: "Search: category / group / filename",
+      empty: "No files in this group.",
+      copy: "Copy link",
+      open: "Open",
+      done: "Done",
+      copied: "Copied!",
+      copyFail: "Copy failed. Try again.",
+    },
+    ZH: {
+      title: "你的资源库",
+      subtitle: "搜索、预览并复制直链。干净、快速、稳定。",
+      searchPH: "搜索：分类 / 子分类 / 文件名",
+      empty: "这个分组暂无文件。",
+      copy: "复制链接",
+      open: "打开",
+      done: "完成",
+      copied: "已复制！",
+      copyFail: "复制失败，请重试。",
+    },
+  };
+
+  let lang = "EN";
+  function t(key) {
+    return I18N[lang][key] ?? key;
   }
-};
-
-const state = {
-  lang: "en",
-  manifest: null,
-  activeGroup: { avatars: "root", icons: "root", photos: "root" },
-  query: ""
-};
-
-(function initRepoLink(){
-  const owner = location.hostname.split(".")[0];
-  const repo = location.pathname.split("/").filter(Boolean)[0] || "assets";
-  $("#repoBtn").href = `https://github.com/${owner}/${repo}`;
-})();
-
-function applyLang(){
-  const t = i18n[state.lang];
-  $("#title").textContent = t.title;
-  $("#subtitle").textContent = t.subtitle;
-  $("#search").placeholder = t.searchPH;
-  $("#repoBtn").textContent = t.openRepo;
-  $("#copyBtn").textContent = t.copy;
-  $("#openBtn").textContent = t.open;
-  $("#doneBtn").textContent = t.done;
-  $("#langBtn").textContent = state.lang.toUpperCase();
-}
-
-$("#langBtn").addEventListener("click", () => {
-  state.lang = state.lang === "en" ? "zh" : "en";
-  applyLang();
-  render();
-});
-
-async function loadManifest(){
-  const v = Date.now();
-  const url = `./data/manifest.json?v=${v}`;
-  $("#status").textContent = " ";
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    state.manifest = await res.json();
-    $("#status").textContent = " ";
-  } catch {
-    state.manifest = null;
-    $("#status").textContent = i18n[state.lang].loadFail;
-  }
-}
-
-function getCategoryLabel(key){
-  const t = i18n[state.lang];
-  if(key === "avatars") return t.avatars;
-  if(key === "icons") return t.icons;
-  if(key === "photos") return t.photos;
-  return key;
-}
-
-function matchQuery(path, cat, group){
-  if(!state.query) return true;
-  const q = state.query.toLowerCase().trim();
-  const hay = `${cat}/${group}/${path}`.toLowerCase();
-  return hay.includes(q);
-}
-
-/* ✅ The key: force wheel scroll to stay inside .grid */
-function lockScrollToGrid(grid){
-  // Wheel (trackpad/mouse)
-  grid.addEventListener("wheel", (e) => {
-    // if grid can scroll, always consume the event and scroll grid manually
-    if (grid.scrollHeight <= grid.clientHeight) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    // vertical scroll
-    grid.scrollTop += e.deltaY;
-  }, { passive: false });
-
-  // Touch (mobile)
-  let startY = 0;
-  grid.addEventListener("touchstart", (e) => {
-    if (!e.touches || !e.touches[0]) return;
-    startY = e.touches[0].clientY;
-  }, { passive: true });
-
-  grid.addEventListener("touchmove", (e) => {
-    if (grid.scrollHeight <= grid.clientHeight) return;
-    if (!e.touches || !e.touches[0]) return;
-
-    const dy = startY - e.touches[0].clientY;
-    // prevent page from moving
-    e.preventDefault();
-    e.stopPropagation();
-    grid.scrollTop += dy;
-    startY = e.touches[0].clientY;
-  }, { passive: false });
-}
-
-function render(){
-  const t = i18n[state.lang];
-  const root = $("#cards");
-  root.innerHTML = "";
-
-  if(!state.manifest){
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-inner">
-        <div class="card-head">
-          <div>
-            <div class="card-title">${escapeHtml(t.loadFail)}</div>
-            <div class="card-meta">${escapeHtml(t.manifestFail)}</div>
-          </div>
-          <span class="badge">!</span>
-        </div>
-      </div>
-    `;
-    root.appendChild(card);
-    return;
+  function applyLang() {
+    title.textContent = t("title");
+    subtitle.textContent = t("subtitle");
+    q.placeholder = t("searchPH");
+    copyBtn.textContent = t("copy");
+    openBtn.textContent = t("open");
+    closeBtn.textContent = t("done");
+    langLabel.textContent = lang;
+    // 不要让布局抖动：按钮宽度固定在 CSS 里了
   }
 
-  const categories = state.manifest.categories || {};
-  const order = ["avatars","icons","photos"].filter(k => k in categories);
+  langBtn.addEventListener("click", () => {
+    lang = lang === "EN" ? "ZH" : "EN";
+    applyLang();
+    render(); // 切换语言时更新空状态文案
+  });
 
-  for(const cat of order){
-    const info = categories[cat] || { total:0, groups:{} };
-    const groups = info.groups || {};
-    const groupNames = Object.keys(groups);
-    const active = state.activeGroup[cat] || (groupNames[0] || "root");
-    state.activeGroup[cat] = active;
+  // ===== Toast =====
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 900);
+  }
 
-    const total = info.total ?? 0;
+  // ===== Modal =====
+  let currentLink = "";
+  function openModal(name, path, url) {
+    currentLink = url;
+    modal.setAttribute("aria-hidden", "false");
+    modalName.textContent = name;
+    modalPath.textContent = url;
+    modalImg.src = url;
+    openBtn.href = url;
+  }
+  function closeModal() {
+    modal.setAttribute("aria-hidden", "true");
+    currentLink = "";
+    modalImg.src = "";
+  }
+  modalOverlay.addEventListener("click", closeModal);
+  closeBtn.addEventListener("click", closeModal);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.getAttribute("aria-hidden") === "false") closeModal();
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(currentLink);
+      showToast(t("copied"));
+    } catch {
+      showToast(t("copyFail"));
+    }
+  });
+
+  // ===== Data =====
+  let manifest = null;
+  let flat = []; // [{category, group, path, url, name}]
+  let query = "";
+
+  async function loadManifest() {
+    status.textContent = "Loading…";
+    const res = await fetch(manifestURL.toString(), { cache: "no-store" });
+    if (!res.ok) throw new Error(`Manifest fetch failed: ${res.status}`);
+    manifest = await res.json();
+    buildFlat();
+    status.textContent = "";
+  }
+
+  function buildFlat() {
+    flat = [];
+    const cats = manifest?.categories || {};
+    for (const [catName, catObj] of Object.entries(cats)) {
+      const groups = catObj?.groups || {};
+      for (const [groupName, list] of Object.entries(groups)) {
+        for (const p of list) {
+          const url = new URL(p, base).toString();
+          const name = p.split("/").pop();
+          flat.push({ category: catName, group: groupName, path: p, url, name });
+        }
+      }
+    }
+  }
+
+  // ===== Render =====
+  function matches(item) {
+    if (!query) return true;
+    const hay = `${item.category}/${item.group}/${item.name}`.toLowerCase();
+    return hay.includes(query);
+  }
+
+  function renderCard(categoryKey, groupName, items) {
+    const total = items.length;
 
     const card = document.createElement("div");
     card.className = "card";
 
-    const inner = document.createElement("div");
-    inner.className = "card-inner";
+    const top = document.createElement("div");
+    top.className = "cardTop";
 
-    const head = document.createElement("div");
-    head.className = "card-head";
-    head.innerHTML = `
-      <div>
-        <div class="card-title">${escapeHtml(getCategoryLabel(cat))}</div>
-        <div class="card-meta">${escapeHtml(active)}</div>
-      </div>
-      <span class="badge">${total}</span>
-    `;
+    const left = document.createElement("div");
+    const h = document.createElement("div");
+    h.className = "cardTitle";
+    h.textContent = categoryKey[0].toUpperCase() + categoryKey.slice(1);
+    const sub = document.createElement("div");
+    sub.className = "cardSub";
+    sub.textContent = groupName;
+    left.appendChild(h);
+    left.appendChild(sub);
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = String(total);
+
+    top.appendChild(left);
+    top.appendChild(badge);
 
     const groupRow = document.createElement("div");
     groupRow.className = "groupRow";
+    const pill = document.createElement("div");
+    pill.className = "groupPill";
+    pill.textContent = groupName;
+    groupRow.appendChild(pill);
 
-    const sortedGroups = groupNames.length ? groupNames.slice().sort() : ["root"];
-    for(const g of sortedGroups){
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "groupBtn" + (g === active ? " active" : "");
-      btn.textContent = g;
-      btn.addEventListener("click", () => {
-        state.activeGroup[cat] = g;
-        render();
-      });
-      groupRow.appendChild(btn);
-    }
+    const body = document.createElement("div");
+    body.className = "cardBody";
 
-    const grid = document.createElement("div");
-    grid.className = "grid";
-    lockScrollToGrid(grid); // ✅ apply lock
-
-    const list = (groups[active] || []).slice();
-    const filtered = list.filter(p => matchQuery(p, cat, active));
-
-    if(filtered.length === 0){
+    if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = t.empty;
-      grid.appendChild(empty);
+      empty.textContent = t("empty");
+      body.appendChild(empty);
     } else {
-      for(const rel of filtered){
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        tile.title = rel;
+      const g = document.createElement("div");
+      g.className = "thumbGrid";
+
+      for (const item of items) {
+        const a = document.createElement("a");
+        a.className = "thumb";
+        a.href = "javascript:void(0)";
 
         const img = document.createElement("img");
         img.loading = "lazy";
-        img.alt = rel;
-        img.src = `./${rel}`;
+        img.decoding = "async";
+        img.src = item.url;
+        img.alt = item.name;
 
-        const hint = document.createElement("div");
-        hint.className = "hint";
-        hint.textContent = "Preview";
+        a.appendChild(img);
 
-        tile.appendChild(img);
-        tile.appendChild(hint);
-        tile.addEventListener("click", () => openModal(rel));
+        a.addEventListener("click", () => {
+          openModal(item.name, item.path, item.url);
+        });
 
-        grid.appendChild(tile);
+        g.appendChild(a);
       }
+
+      body.appendChild(g);
     }
 
-    inner.appendChild(head);
-    inner.appendChild(groupRow);
-    inner.appendChild(grid);
-    card.appendChild(inner);
-    root.appendChild(card);
+    card.appendChild(top);
+    card.appendChild(groupRow);
+    card.appendChild(body);
+
+    // 关键：滚轮优先滚卡片内部，不带动整页（body 已 overflow:hidden）
+    return card;
   }
-}
 
-$("#search").addEventListener("input", (e) => {
-  state.query = e.target.value || "";
-  render();
-});
+  function render() {
+    grid.innerHTML = "";
 
-function openModal(rel){
-  const t = i18n[state.lang];
-  const modal = $("#modal");
-  const img = $("#modalImg");
-  const url = new URL(rel, location.href).toString();
+    // 按分类渲染：avatars / icons / photos
+    const cats = ["avatars", "icons", "photos"];
+    for (const cat of cats) {
+      const items = flat.filter((x) => x.category === cat).filter(matches);
 
-  $("#modalName").textContent = rel.split("/").pop();
-  $("#modalPath").textContent = rel;
-  img.src = url;
-  $("#openBtn").href = url;
-
-  $("#copyBtn").textContent = t.copy;
-  $("#copyBtn").onclick = async () => {
-    const btn = $("#copyBtn");
-    const originalText = t.copy;
-    const setBtn = (text) => { btn.textContent = text; };
-
-    try {
-      await navigator.clipboard.writeText(url);
-      setBtn(state.lang === "zh" ? "已复制 ✓" : "Copied ✓");
-      toast(t.copied, "ok");
-      setTimeout(() => setBtn(originalText), 900);
-    } catch {
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = url;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-
-        setBtn(state.lang === "zh" ? "已复制 ✓" : "Copied ✓");
-        toast(t.copied, "ok");
-        setTimeout(() => setBtn(originalText), 900);
-      } catch {
-        toast(t.copyFail, "err");
-        setBtn(state.lang === "zh" ? "复制失败" : "Failed");
-        setTimeout(() => setBtn(originalText), 1200);
+      // 默认只渲染 root 组（你后面加子组也可以扩展）
+      // 这里把所有 group 合并展示为 root（你现在就是 root）
+      const byGroup = {};
+      for (const it of items) {
+        const g = it.group || "root";
+        (byGroup[g] ||= []).push(it);
       }
+
+      // 优先 root
+      const groups = Object.keys(byGroup);
+      const groupToShow = groups.includes("root") ? "root" : (groups[0] || "root");
+      const list = byGroup[groupToShow] || [];
+
+      grid.appendChild(renderCard(cat, groupToShow, list));
     }
-  };
 
-  $("#doneBtn").onclick = closeModal;
-  $("#modalClose").onclick = closeModal;
-  $("#modalBackdrop").onclick = closeModal;
+    // 状态
+    const count = flat.filter(matches).length;
+    status.textContent = count ? `${count}` : "";
+  }
 
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-}
+  // ===== Search =====
+  q.addEventListener("input", () => {
+    query = (q.value || "").trim().toLowerCase();
+    render();
+  });
 
-function closeModal(){
-  const modal = $("#modal");
-  modal.classList.remove("show");
-  modal.setAttribute("aria-hidden", "true");
-}
-
-window.addEventListener("keydown", (e) => {
-  if(e.key === "Escape") closeModal();
-});
-
-(async function boot(){
-  state.lang = "en";
+  // ===== Boot =====
   applyLang();
-  await loadManifest();
-  render();
+  loadManifest()
+    .then(() => render())
+    .catch((err) => {
+      status.textContent = "Load failed";
+      showToast("Manifest load failed. Check /data/manifest.json");
+      console.error(err);
+    });
 })();
