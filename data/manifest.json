@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-07T10:08:36.022Z",
+  "generatedAt": "2026-02-07T16:21:55.869Z",
   "categories": {
     "avatars": {
       "total": 23,
@@ -36,8 +36,30 @@
       "groups": {}
     },
     "photos": {
-      "total": 0,
-      "groups": {}
+      "total": 19,
+      "groups": {
+        "root": [
+          "photos/Brand-Flowers-Static-1.jpeg",
+          "photos/Ethereal Motion (1).jpeg",
+          "photos/Ethereal Motion (2).jpeg",
+          "photos/Ethereal Motion (5).jpeg",
+          "photos/Ethereal Motion (6).jpeg",
+          "photos/Microsoft_1975.jpeg",
+          "photos/Microsoft_1980.jpeg",
+          "photos/Microsoft_Surface_Duo.jpeg",
+          "photos/Surface_Laptop_3_01.jpeg",
+          "photos/Surface_Laptop_3_02.jpeg",
+          "photos/Surface_Laptop_3_03.jpeg",
+          "photos/Surface_Laptop_3_04.jpeg",
+          "photos/Surface_Laptop_3_05.jpeg",
+          "photos/Surface_Laptop_3_06.jpeg",
+          "photos/Surface_Laptop_3_07.jpeg",
+          "photos/Surface_Laptop_3_08.jpeg",
+          "photos/Windows_Wallpaper Expeditions_IG_ Frauke Hameister_1x1.jpeg",
+          "photos/Windows_Wallpaper Expeditions_IG_ Justin Chochuette_1x1.jpeg",
+          "photos/Windows_Wallpaper Expeditions_IG_ Kohki Yamaguchi_1x1.jpeg"
+        ]
+      }
     }
   }
 }
