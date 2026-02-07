@@ -2,30 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
   <title>Asset Library</title>
-  <meta name="description" content="Browse, preview, and copy direct links for your assets." />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=1" />
 </head>
-
 <body>
-  <div class="bg">
-    <div class="glow g1"></div>
-    <div class="glow g2"></div>
-    <div class="glow g3"></div>
-    <div class="noise"></div>
-  </div>
+  <div class="bg"></div>
 
   <header class="topbar">
     <div class="brand">
       <span class="dot"></span>
-      <span class="brandTitle">assets</span>
-      <span class="pill">GitHub Pages</span>
+      <span class="brand-title">assets</span>
+      <span class="brand-sub">GitHub Pages</span>
     </div>
 
     <div class="actions">
-      <button class="chip" id="langBtn" title="Language">EN</button>
-      <a class="chip" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
+      <button id="langBtn" class="pill" type="button" aria-label="Language">EN</button>
+      <a id="repoBtn" class="pill" href="#" target="_blank" rel="noreferrer">Open Repo</a>
     </div>
   </header>
 
@@ -35,43 +29,44 @@
       <p id="subtitle">Search, preview, and copy direct links.</p>
 
       <div class="searchRow">
-        <input id="q" class="search" placeholder="Search: category / group / filename" autocomplete="off" />
-        <div class="status" id="status"></div>
+        <input id="search" class="search" autocomplete="off" spellcheck="false"
+               placeholder="Search: category / group / filename" />
+        <div id="status" class="status"> </div>
       </div>
     </section>
 
-    <section class="grid" id="grid"></section>
-
-    <footer class="foot">
-      <span id="footLeft">Direct links are GitHub Pages URLs.</span>
-      <a id="manifestLink" href="./data/manifest.json" target="_blank" rel="noreferrer">manifest.json</a>
-    </footer>
+    <section id="cards" class="cards"></section>
   </main>
 
-  <!-- Preview Modal -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modalBackdrop" id="modalBackdrop"></div>
-    <div class="modalPanel" role="dialog" aria-modal="true">
-      <div class="modalTop">
-        <div class="modalMeta">
-          <div class="fileName" id="modalName">—</div>
-          <div class="filePath" id="modalPath">—</div>
+  <!-- Modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div class="modal-title">
+          <div id="modalName" class="modal-name"></div>
+          <div id="modalPath" class="modal-path"></div>
         </div>
-        <div class="modalBtns">
-          <button class="btn" id="copyBtn">Copy link</button>
-          <a class="btn" id="openBtn" href="#" target="_blank" rel="noreferrer">Open</a>
-          <button class="btn btnGhost" id="closeBtn">Done</button>
+        <button id="modalClose" class="iconbtn" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="preview">
+          <img id="modalImg" alt="" />
         </div>
       </div>
 
-      <div class="modalBody">
-        <img id="modalImg" alt="" />
+      <div class="modal-foot">
+        <button id="copyBtn" class="btn" type="button">Copy link</button>
+        <a id="openBtn" class="btn ghost" href="#" target="_blank" rel="noreferrer">Open</a>
+        <button id="doneBtn" class="btn ghost" type="button">Done</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">Copied</div>
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="./app.js"></script>
+  <script src="./app.js?v=1"></script>
 </body>
 </html>
