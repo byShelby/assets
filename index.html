@@ -2,40 +2,146 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Assets</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>assets</title>
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;
-      margin:0;background:#0b0f19;color:#e8eefc}
-    .wrap{max-width:980px;margin:0 auto;padding:48px 18px}
-    .card{background:#121a2a;border:1px solid #1f2a44;border-radius:16px;padding:22px}
-    h1{margin:0 0 6px;font-size:28px}
-    p{margin:8px 0 16px;color:#a9b6d3;line-height:1.6}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
-    a.btn{display:block;padding:14px 14px;border-radius:14px;background:#18233a;
-      border:1px solid #263557;color:#e8eefc;text-decoration:none}
-    a.btn:hover{background:#1d2a45}
-    code{background:#0b1222;border:1px solid #1f2a44;padding:2px 6px;border-radius:8px}
-    .small{font-size:13px;color:#93a3c6}
+    :root{
+      --bg:#070A12;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --line:rgba(255,255,255,.10);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Noto Sans CJK SC", Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 20%, rgba(124,58,237,.35), transparent 55%),
+        radial-gradient(900px 500px at 80% 15%, rgba(59,130,246,.28), transparent 55%),
+        radial-gradient(900px 500px at 50% 90%, rgba(236,72,153,.18), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1100px;margin:0 auto;padding:48px 20px}
+    .top{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(0,0,0,.25)
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#7c3aed,#3b82f6)}
+    h1{font-size:44px;line-height:1.05;margin:0 0 10px}
+    .sub{color:var(--muted);max-width:720px}
+    .search{
+      margin-top:18px;
+      display:flex;gap:10px;align-items:center;
+      padding:12px 14px;border:1px solid var(--line);border-radius:999px;
+      background:rgba(0,0,0,.25);backdrop-filter: blur(10px);
+    }
+    .search input{
+      width:100%;border:0;outline:none;background:transparent;color:var(--text);font-size:14px
+    }
+    .grid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px
+    }
+    .card{
+      border:1px solid var(--line);border-radius:var(--radius);
+      background:linear-gradient(180deg,var(--card),rgba(0,0,0,.15));
+      padding:16px;
+      transition:transform .15s ease, background .15s ease;
+      overflow:hidden;
+    }
+    .card:hover{transform:translateY(-2px);background:linear-gradient(180deg,var(--card2),rgba(0,0,0,.20))}
+    .card h3{margin:0 0 6px;font-size:16px}
+    .card p{margin:0 0 12px;color:var(--muted);font-size:13px}
+    .list{display:flex;flex-wrap:wrap;gap:8px}
+    .pill{
+      font-size:12px;color:var(--muted);
+      border:1px solid var(--line);border-radius:999px;padding:7px 10px;
+      background:rgba(0,0,0,.18)
+    }
+    .thumbs{margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .thumb{
+      aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);
+      background:rgba(255,255,255,.04)
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .footer{margin-top:28px;color:var(--muted);font-size:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1>Assets</h1>
-      <p>这里是我的图片/头像/图标资源库。你可以直接用 <code>直链</code> 作为头像 URL。</p>
-
-      <div class="grid">
-        <a class="btn" href="./avatars/">Avatars（头像）</a>
-        <a class="btn" href="./icons/">Icons（图标）</a>
-        <a class="btn" href="./photos/">Photos（照片）</a>
-      </div>
-
-      <p class="small" style="margin-top:18px">
-        示例直链：<br>
-        <code>https://byshelby.github.io/assets/avatars/avatar/avatar-1.jpg</code>
-      </p>
+    <div class="top">
+      <div class="brand"><span class="dot"></span><strong>assets</strong><span style="color:var(--muted);font-size:12px">GitHub Pages</span></div>
+      <a class="pill" href="https://github.com/byShelby/assets" target="_blank" rel="noreferrer">Open Repo</a>
     </div>
+
+    <h1>你的资源库</h1>
+    <div class="sub">像 Spaceship 那样：极简深色、渐变氛围、卡片分类。复制下面任何图片即可作为头像直链使用。</div>
+
+    <div class="search">
+      <span style="color:var(--muted);font-size:12px">⌘ K</span>
+      <input id="q" placeholder="搜索文件名，比如：avatar-1 / logo / icon..." />
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="footer">提示：直链格式为：<span class="pill">https://byshelby.github.io/assets/路径/文件名</span></div>
   </div>
+
+  <script>
+    const BASE = "https://byshelby.github.io/assets/";
+    const CATEGORIES = [
+      { key:"avatars", title:"Avatars", desc:"头像（适合网站填头像链接）", json:"avatars/index.json" },
+      { key:"icons",   title:"Icons",   desc:"图标（小尺寸 / favicon / UI）", json:"icons/index.json" },
+      { key:"photos",  title:"Photos",  desc:"照片（展示图 / 背景图）", json:"photos/index.json" }
+    ];
+
+    const grid = document.getElementById("grid");
+    const q = document.getElementById("q");
+
+    function cardHTML(cat, items){
+      const pills = items.slice(0,6).map(x => `<a class="pill" href="${BASE}${x}" target="_blank" rel="noreferrer">${x.split("/").pop()}</a>`).join("");
+      const thumbs = items.slice(0,8).map(x => `<a class="thumb" href="${BASE}${x}" target="_blank" rel="noreferrer"><img loading="lazy" src="${BASE}${x}"/></a>`).join("");
+      return `
+        <div class="card" data-key="${cat.key}">
+          <h3>${cat.title}</h3>
+          <p>${cat.desc}</p>
+          <div class="list">${pills || `<span class="pill">还没放文件</span>`}</div>
+          ${items.length ? `<div class="thumbs">${thumbs}</div>` : ``}
+        </div>
+      `;
+    }
+
+    async function load(){
+      grid.innerHTML = "";
+      for(const cat of CATEGORIES){
+        let items = [];
+        try{
+          const res = await fetch(BASE + cat.json, {cache:"no-store"});
+          if(res.ok) items = await res.json();
+        }catch(e){}
+        grid.insertAdjacentHTML("beforeend", cardHTML(cat, items));
+      }
+    }
+
+    function filter(){
+      const kw = q.value.trim().toLowerCase();
+      document.querySelectorAll(".card").forEach(card=>{
+        if(!kw){ card.style.display=""; return; }
+        card.style.display = card.innerText.toLowerCase().includes(kw) ? "" : "none";
+      });
+    }
+
+    q.addEventListener("input", filter);
+    load();
+  </script>
 </body>
 </html>
