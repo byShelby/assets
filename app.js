@@ -1,285 +1,307 @@
 (() => {
-  const $ = (id) => document.getElementById(id);
+  const $ = (s) => document.querySelector(s);
 
-  const grid = $("grid");
-  const q = $("q");
-  const status = $("status");
-  const repoBtn = $("repoBtn");
+  const grid = $("#grid");
+  const searchInput = $("#searchInput");
+  const statusPill = $("#statusPill");
+  const langBtn = $("#langBtn");
+  const repoBtn = $("#repoBtn");
 
-  const modal = $("modal");
-  const modalOverlay = $("modalOverlay");
-  const modalImg = $("modalImg");
-  const modalName = $("modalName");
-  const modalPath = $("modalPath");
-  const copyBtn = $("copyBtn");
-  const openBtn = $("openBtn");
-  const closeBtn = $("closeBtn");
+  const modal = $("#modal");
+  const modalImg = $("#modalImg");
+  const modalName = $("#modalName");
+  const modalPath = $("#modalPath");
+  const copyBtn = $("#copyBtn");
+  const openBtn = $("#openBtn");
+  const toast = $("#toast");
 
-  const toast = $("toast");
-  const langBtn = $("langBtn");
-  const langLabel = $("langLabel");
-  const title = $("title");
-  const subtitle = $("subtitle");
-
-  // ===== Base URL (works on GitHub Pages subpath like /assets/) =====
-  const base = new URL("./", window.location.href); // ends with /assets/
-  const manifestURL = new URL("data/manifest.json", base);
-  const repoURL = (() => {
-    // Try to guess repo from location: https://username.github.io/repo/
-    // -> https://github.com/username/repo
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    // parts[0] should be repo name on GH pages (for project pages)
-    // host contains username.github.io
-    const user = window.location.hostname.split(".")[0];
-    const repo = parts[0] || "assets";
-    return `https://github.com/${user}/${repo}`;
-  })();
-  repoBtn.href = repoURL;
-
-  // cache-bust via ?v=xxx
-  const v = new URLSearchParams(location.search).get("v");
-  if (v) manifestURL.searchParams.set("v", v);
-
-  // ===== i18n =====
+  // === i18n（最小化，不放“测试文案”，不影响布局） ===
   const I18N = {
-    EN: {
+    en: {
       title: "Asset Library",
       subtitle: "Search, preview, and copy direct links.",
       searchPH: "Search: category / group / filename",
+      ready: "Ready",
+      loadFail: "Load failed",
       empty: "No files in this group.",
       copy: "Copy link",
+      copied: "Copied ✅",
+      copyFailed: "Copy failed",
       open: "Open",
       done: "Done",
-      copied: "Copied!",
-      copyFail: "Copy failed. Try again.",
     },
-    ZH: {
-      title: "你的资源库",
-      subtitle: "搜索、预览并复制直链。干净、快速、稳定。",
-      searchPH: "搜索：分类 / 子分类 / 文件名",
-      empty: "这个分组暂无文件。",
+    zh: {
+      title: "资源库",
+      subtitle: "搜索、预览、一键复制直链。",
+      searchPH: "搜索：分类 / 分组 / 文件名",
+      ready: "就绪",
+      loadFail: "加载失败",
+      empty: "该分组暂无文件。",
       copy: "复制链接",
+      copied: "已复制 ✅",
+      copyFailed: "复制失败",
       open: "打开",
       done: "完成",
-      copied: "已复制！",
-      copyFail: "复制失败，请重试。",
-    },
+    }
   };
 
-  let lang = "EN";
-  function t(key) {
-    return I18N[lang][key] ?? key;
-  }
-  function applyLang() {
-    title.textContent = t("title");
-    subtitle.textContent = t("subtitle");
-    q.placeholder = t("searchPH");
+  let lang = "en";
+  function t(key){ return I18N[lang][key] || I18N.en[key] || key; }
+
+  function applyLang(){
+    $("#title").textContent = t("title");
+    $("#subtitle").textContent = t("subtitle");
+    searchInput.placeholder = t("searchPH");
+    statusPill.textContent = t("ready");
     copyBtn.textContent = t("copy");
     openBtn.textContent = t("open");
-    closeBtn.textContent = t("done");
-    langLabel.textContent = lang;
-    // 不要让布局抖动：按钮宽度固定在 CSS 里了
   }
 
-  langBtn.addEventListener("click", () => {
-    lang = lang === "EN" ? "ZH" : "EN";
-    applyLang();
-    render(); // 切换语言时更新空状态文案
-  });
+  // === Base URL for direct links on GitHub Pages ===
+  // Example: https://byshelby.github.io/assets/ + avatars/avatar-1.jpg
+  function baseUrl(){
+    // ensure trailing slash
+    let p = location.pathname;
+    // If on /assets/index.html -> use /assets/
+    if (p.endsWith("index.html")) p = p.slice(0, -("index.html".length));
+    if (!p.endsWith("/")) p += "/";
+    return location.origin + p;
+  }
 
-  // ===== Toast =====
+  function assetLink(assetPath){
+    return new URL(assetPath.replace(/^\//, ""), baseUrl()).href;
+  }
+
+  // === Toast ===
   let toastTimer = null;
-  function showToast(msg) {
+  function showToast(msg){
     toast.textContent = msg;
     toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 900);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1200);
   }
 
-  // ===== Modal =====
-  let currentLink = "";
-  function openModal(name, path, url) {
-    currentLink = url;
-    modal.setAttribute("aria-hidden", "false");
-    modalName.textContent = name;
-    modalPath.textContent = url;
-    modalImg.src = url;
-    openBtn.href = url;
-  }
-  function closeModal() {
-    modal.setAttribute("aria-hidden", "true");
-    currentLink = "";
-    modalImg.src = "";
-  }
-  modalOverlay.addEventListener("click", closeModal);
-  closeBtn.addEventListener("click", closeModal);
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.getAttribute("aria-hidden") === "false") closeModal();
-  });
-
-  copyBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(currentLink);
+  // === Clipboard ===
+  async function copyToClipboard(text){
+    try{
+      await navigator.clipboard.writeText(text);
       showToast(t("copied"));
-    } catch {
-      showToast(t("copyFail"));
-    }
-  });
-
-  // ===== Data =====
-  let manifest = null;
-  let flat = []; // [{category, group, path, url, name}]
-  let query = "";
-
-  async function loadManifest() {
-    status.textContent = "Loading…";
-    const res = await fetch(manifestURL.toString(), { cache: "no-store" });
-    if (!res.ok) throw new Error(`Manifest fetch failed: ${res.status}`);
-    manifest = await res.json();
-    buildFlat();
-    status.textContent = "";
-  }
-
-  function buildFlat() {
-    flat = [];
-    const cats = manifest?.categories || {};
-    for (const [catName, catObj] of Object.entries(cats)) {
-      const groups = catObj?.groups || {};
-      for (const [groupName, list] of Object.entries(groups)) {
-        for (const p of list) {
-          const url = new URL(p, base).toString();
-          const name = p.split("/").pop();
-          flat.push({ category: catName, group: groupName, path: p, url, name });
-        }
+      return true;
+    }catch(e){
+      // fallback
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast(t("copied"));
+        return true;
+      }catch(err){
+        showToast(t("copyFailed"));
+        return false;
       }
     }
   }
 
-  // ===== Render =====
-  function matches(item) {
-    if (!query) return true;
-    const hay = `${item.category}/${item.group}/${item.name}`.toLowerCase();
-    return hay.includes(query);
+  // === Modal ===
+  let currentLink = "";
+  function openModal({ name, path }){
+    const link = assetLink(path);
+    currentLink = link;
+
+    modalName.textContent = name;
+    modalPath.textContent = link;
+    modalImg.src = link;
+    openBtn.href = link;
+
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+  }
+  function closeModal(){
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    modalImg.src = "";
+    currentLink = "";
   }
 
-  function renderCard(categoryKey, groupName, items) {
-    const total = items.length;
+  modal.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
+  });
 
-    const card = document.createElement("div");
+  copyBtn.addEventListener("click", () => {
+    if (!currentLink) return;
+    copyToClipboard(currentLink);
+  });
+
+  // === Render ===
+  let manifest = null;
+
+  function setStatus(type, msg){
+    statusPill.classList.remove("pill-muted", "pill-bad", "pill-ok");
+    if (type === "bad") statusPill.classList.add("pill-bad");
+    else if (type === "ok") statusPill.classList.add("pill-ok");
+    else statusPill.classList.add("pill-muted");
+    statusPill.textContent = msg;
+  }
+
+  function normalize(str){ return (str || "").toLowerCase(); }
+
+  function buildCard(categoryName, categoryObj, query){
+    const groups = categoryObj?.groups || {};
+    const groupNames = Object.keys(groups);
+    const firstGroup = groupNames[0] || "root";
+    const files = groups[firstGroup] || [];
+
+    const total = categoryObj?.total ?? files.length ?? 0;
+
+    const card = document.createElement("article");
     card.className = "card";
 
-    const top = document.createElement("div");
-    top.className = "cardTop";
+    const head = document.createElement("div");
+    head.className = "card-head";
 
     const left = document.createElement("div");
-    const h = document.createElement("div");
-    h.className = "cardTitle";
-    h.textContent = categoryKey[0].toUpperCase() + categoryKey.slice(1);
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = categoryName[0].toUpperCase() + categoryName.slice(1);
+
     const sub = document.createElement("div");
-    sub.className = "cardSub";
-    sub.textContent = groupName;
-    left.appendChild(h);
+    sub.className = "card-sub";
+    sub.textContent = firstGroup;
+
+    left.appendChild(title);
     left.appendChild(sub);
 
     const badge = document.createElement("div");
-    badge.className = "badge";
-    badge.textContent = String(total);
+    badge.className = "card-badge";
 
-    top.appendChild(left);
-    top.appendChild(badge);
+    const groupPill = document.createElement("div");
+    groupPill.className = "group-pill";
+    groupPill.textContent = firstGroup;
 
-    const groupRow = document.createElement("div");
-    groupRow.className = "groupRow";
-    const pill = document.createElement("div");
-    pill.className = "groupPill";
-    pill.textContent = groupName;
-    groupRow.appendChild(pill);
+    const count = document.createElement("div");
+    count.className = "count";
+    count.textContent = String(total);
+
+    badge.appendChild(groupPill);
+    badge.appendChild(count);
+
+    head.appendChild(left);
+    head.appendChild(badge);
 
     const body = document.createElement("div");
-    body.className = "cardBody";
+    body.className = "card-body";
 
-    if (!items.length) {
+    // Filter by search query
+    const q = normalize(query);
+    const filtered = files.filter((p) => {
+      const hay = normalize(`${categoryName}/${firstGroup}/${p}`);
+      return !q || hay.includes(q);
+    });
+
+    if (!filtered.length){
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = t("empty");
       body.appendChild(empty);
     } else {
-      const g = document.createElement("div");
-      g.className = "thumbGrid";
+      const grid = document.createElement("div");
+      grid.className = "thumb-grid";
 
-      for (const item of items) {
-        const a = document.createElement("a");
+      filtered.forEach((path) => {
+        const name = path.split("/").pop();
+
+        const a = document.createElement("button");
+        a.type = "button";
         a.className = "thumb";
-        a.href = "javascript:void(0)";
+        a.title = path;
 
         const img = document.createElement("img");
         img.loading = "lazy";
         img.decoding = "async";
-        img.src = item.url;
-        img.alt = item.name;
+        img.alt = name;
+        img.src = assetLink(path);
 
         a.appendChild(img);
+        a.addEventListener("click", () => openModal({ name, path }));
 
-        a.addEventListener("click", () => {
-          openModal(item.name, item.path, item.url);
-        });
+        grid.appendChild(a);
+      });
 
-        g.appendChild(a);
-      }
-
-      body.appendChild(g);
+      body.appendChild(grid);
     }
 
-    card.appendChild(top);
-    card.appendChild(groupRow);
+    card.appendChild(head);
     card.appendChild(body);
-
-    // 关键：滚轮优先滚卡片内部，不带动整页（body 已 overflow:hidden）
     return card;
   }
 
-  function render() {
+  function render(){
+    if (!manifest) return;
+
+    const query = searchInput.value || "";
     grid.innerHTML = "";
 
-    // 按分类渲染：avatars / icons / photos
-    const cats = ["avatars", "icons", "photos"];
-    for (const cat of cats) {
-      const items = flat.filter((x) => x.category === cat).filter(matches);
-
-      // 默认只渲染 root 组（你后面加子组也可以扩展）
-      // 这里把所有 group 合并展示为 root（你现在就是 root）
-      const byGroup = {};
-      for (const it of items) {
-        const g = it.group || "root";
-        (byGroup[g] ||= []).push(it);
+    const cats = manifest.categories || {};
+    const order = ["avatars", "icons", "photos"];
+    order.forEach((k) => {
+      if (!cats[k]) {
+        // still show empty card if missing
+        cats[k] = { total: 0, groups: { root: [] } };
       }
-
-      // 优先 root
-      const groups = Object.keys(byGroup);
-      const groupToShow = groups.includes("root") ? "root" : (groups[0] || "root");
-      const list = byGroup[groupToShow] || [];
-
-      grid.appendChild(renderCard(cat, groupToShow, list));
-    }
-
-    // 状态
-    const count = flat.filter(matches).length;
-    status.textContent = count ? `${count}` : "";
+      grid.appendChild(buildCard(k, cats[k], query));
+    });
   }
 
-  // ===== Search =====
-  q.addEventListener("input", () => {
-    query = (q.value || "").trim().toLowerCase();
+  // === Load manifest.json (cache safe) ===
+  async function loadManifest(){
+    setStatus("muted", "Loading…");
+
+    const v = new URLSearchParams(location.search).get("v") || String(Date.now());
+    const url = new URL(`data/manifest.json?v=${encodeURIComponent(v)}`, baseUrl()).href;
+
+    try{
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      manifest = await res.json();
+      setStatus("ok", t("ready"));
+      render();
+    }catch(e){
+      console.error(e);
+      setStatus("bad", t("loadFail"));
+      // still render empty
+      manifest = {
+        categories: {
+          avatars: { total: 0, groups: { root: [] } },
+          icons: { total: 0, groups: { root: [] } },
+          photos: { total: 0, groups: { root: [] } },
+        }
+      };
+      render();
+    }
+  }
+
+  // === Wire ===
+  searchInput.addEventListener("input", () => render());
+
+  langBtn.addEventListener("click", () => {
+    lang = (lang === "en") ? "zh" : "en";
+    langBtn.textContent = (lang === "en") ? "EN" : "中";
+    applyLang();
     render();
   });
 
-  // ===== Boot =====
+  // repo button points to GitHub repo if available
+  repoBtn.href = "https://github.com" + location.pathname.replace(/\/assets\/.*/, "/byshelby/assets");
+
+  // Init
   applyLang();
-  loadManifest()
-    .then(() => render())
-    .catch((err) => {
-      status.textContent = "Load failed";
-      showToast("Manifest load failed. Check /data/manifest.json");
-      console.error(err);
-    });
+  loadManifest();
 })();
