@@ -367,3 +367,59 @@ button,input{ font:inherit; color:inherit; }
   .empty{ height: 340px; }
   .h1{ font-size: 36px; }
 }
+/* ===== FIX: stop overlap (force real grid & disable masonry) ===== */
+
+/* 兜底：卡片里的“图片容器”不管你用啥类名，都强制成 grid */
+.card .grid,
+.card .masonry,
+.card .gallery,
+.card .items,
+.card .thumbs,
+.card [data-grid="1"]{
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+
+  height: 360px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+
+  column-count: unset !important;     /* 禁用 columns 瀑布流 */
+  column-gap: unset !important;
+  position: relative !important;
+}
+
+/* 兜底：容器的“每一个子元素”都变成固定高度卡片，清掉绝对定位/位移 */
+.card .grid > *,
+.card .masonry > *,
+.card .gallery > *,
+.card .items > *,
+.card .thumbs > *,
+.card [data-grid="1"] > *{
+  height: 110px !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  transform: none !important;         /* 禁用 translate 布局导致的重叠 */
+  translate: none !important;
+}
+
+/* 兜底：里面的图片永远铺满且不变形 */
+.card .grid img,
+.card .masonry img,
+.card .gallery img,
+.card .items img,
+.card .thumbs img,
+.card [data-grid="1"] img{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
