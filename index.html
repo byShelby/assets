@@ -1,78 +1,55 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Assets</title>
-    <meta name="description" content="Personal asset library" />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="bg"></div>
-
-    <header class="topbar">
-      <div class="brand">
-        <span class="dot"></span>
-        <span class="brand-title">assets</span>
-      </div>
-
-      <div class="top-actions">
-        <button id="langBtn" class="chip" type="button" aria-label="Language">EN</button>
-        <a id="repoBtn" class="btn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
-      </div>
-    </header>
-
-    <main class="wrap">
-      <section class="hero">
-        <h1 id="title">Your Asset Library</h1>
-        <p id="subtitle" class="muted">
-          Search, preview, and copy direct links. Clean, fast, and stable.
-        </p>
-
-        <div class="searchRow">
-          <input
-            id="search"
-            class="search"
-            type="search"
-            placeholder="Search: category / group / filename (e.g. avatar-1, icons, bg)"
-            autocomplete="off"
-          />
-          <div class="status" id="status"></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="tabs" id="tabs"></div>
-        <div class="grid" id="grid"></div>
-      </section>
-    </main>
-
-    <!-- Modal preview -->
-    <div class="modal" id="modal" aria-hidden="true">
-      <div class="modal-backdrop" id="modalBackdrop"></div>
-      <div class="modal-card" role="dialog" aria-modal="true">
-        <div class="modal-top">
-          <div class="modal-title">
-            <span id="modalPath" class="mono"></span>
-            <span id="modalMeta" class="muted small"></span>
-          </div>
-          <div class="modal-actions">
-            <button class="btn ghost" id="copyBtn" type="button">Copy link</button>
-            <a class="btn ghost" id="openBtn" href="#" target="_blank" rel="noreferrer">Open</a>
-            <button class="btn" id="closeBtn" type="button" aria-label="Close">Done</button>
-          </div>
-        </div>
-
-        <div class="modal-body">
-          <button class="navBtn left" id="prevBtn" type="button" aria-label="Previous">‹</button>
-          <div class="viewer">
-            <img id="modalImg" alt="" />
-          </div>
-          <button class="navBtn right" id="nextBtn" type="button" aria-label="Next">›</button>
-        </div>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Assets</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="name">assets</span>
+      <span class="tag">GitHub Pages</span>
     </div>
 
-    <script src="./app.js"></script>
-  </body>
+    <div class="actions">
+      <button id="langBtn" class="chip" type="button">EN</button>
+      <a id="repoBtn" class="chip" href="#" target="_blank" rel="noreferrer">Open Repo</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1 id="title" class="h1">Asset Library</h1>
+    <p id="subtitle" class="sub">Search, preview, and copy direct links.</p>
+
+    <div class="searchRow">
+      <input id="q" class="search" placeholder="Search: category / group / filename" />
+      <div id="status" class="status"></div>
+    </div>
+
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <!-- Preview Modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modalBackdrop"></div>
+    <div class="modalCard">
+      <div class="modalTop">
+        <div class="modalPath" id="modalPath"></div>
+        <div class="modalBtns">
+          <button id="copyBtn" class="btn" type="button">Copy link</button>
+          <a id="openBtn" class="btn" href="#" target="_blank" rel="noreferrer">Open</a>
+          <button id="closeBtn" class="btn" type="button">Close</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <img id="modalImg" alt="" />
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
 </html>
