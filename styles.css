@@ -34,7 +34,6 @@ body{
     radial-gradient(1100px 700px at 90% 25%, rgba(0,197,255,.22), transparent 55%),
     radial-gradient(900px 600px at 50% 95%, rgba(255,0,153,.18), transparent 55%),
     linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-  filter: blur(0px);
   pointer-events:none;
 }
 
@@ -59,9 +58,8 @@ body{
 
 .actions{
   display:flex; align-items:center; gap:10px;
-  min-width: 220px; justify-content:flex-end; /* stable */
+  min-width: 220px; justify-content:flex-end;
 }
-
 .pill{
   appearance:none;
   border: 1px solid rgba(255,255,255,.10);
@@ -77,7 +75,7 @@ body{
 }
 .pill:hover{background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.16)}
 .pill:active{transform: translateY(1px)}
-#langBtn{width:44px; text-align:center} /* stable button width */
+#langBtn{width:44px; text-align:center}
 
 /* ====== Layout ====== */
 .wrap{max-width: var(--max); margin:0 auto; padding: 26px 20px 60px}
@@ -87,19 +85,18 @@ body{
   font-size: 46px;
   letter-spacing: -0.8px;
   line-height: 1.06;
-  min-height: 56px; /* stable for i18n */
+  min-height: 56px;
 }
 .hero p{
   margin: 0 0 18px 0;
   color: var(--muted);
   font-size: 14px;
-  min-height: 22px; /* stable for i18n */
+  min-height: 22px;
 }
 
 .searchRow{
   display:flex; align-items:center; gap:12px;
 }
-
 .search{
   flex:1;
   height: 44px;
@@ -113,9 +110,8 @@ body{
 }
 .search::placeholder{color: rgba(255,255,255,.34)}
 .search:focus{border-color: rgba(155,123,255,.45); background: rgba(0,0,0,.34)}
-
 .status{
-  min-width: 160px; /* stable */
+  min-width: 160px;
   text-align:right;
   color: var(--muted2);
   font-size: 12px;
@@ -135,19 +131,16 @@ body{
   border: 1px solid rgba(255,255,255,.10);
   box-shadow: var(--shadow);
   overflow:hidden;
-  position:relative;
 }
-.card-inner{padding: 16px}
+.card-inner{
+  padding: 16px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
 .card-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
-.card-title{
-  font-weight: 700;
-  font-size: 14px;
-}
-.card-meta{
-  margin-top: 4px;
-  color: var(--muted2);
-  font-size: 12px;
-}
+.card-title{font-weight: 700; font-size: 14px;}
+.card-meta{margin-top: 4px; color: var(--muted2); font-size: 12px;}
 .badge{
   font-size: 12px;
   color: rgba(255,255,255,.85);
@@ -159,10 +152,7 @@ body{
 }
 
 /* group pills */
-.groupRow{
-  margin-top: 10px;
-  display:flex; gap:8px; flex-wrap:wrap;
-}
+.groupRow{display:flex; gap:8px; flex-wrap:wrap}
 .groupBtn{
   border:1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.06);
@@ -177,13 +167,29 @@ body{
 .groupBtn.active{border-color: rgba(155,123,255,.45); background: rgba(155,123,255,.10)}
 .groupBtn:active{transform: translateY(1px)}
 
-/* grid */
+/* ====== IMPORTANT FIX: internal vertical scrolling for image area ====== */
+/* The page still scrolls normally, but when your cursor is over the grid,
+   the scroll will stay inside the grid instead of moving the whole page. */
 .grid{
-  margin-top: 12px;
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+
+  /* key: make it its own scroll container */
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* prevent scroll chaining to the page */
+  overscroll-behavior: contain;
+
+  /* keep scrollbars invisible */
+  scrollbar-width: none;
+  padding-right: 4px; /* avoids layout shift */
 }
+.grid::-webkit-scrollbar{width:0;height:0}
+
+/* tiles */
 .tile{
   border-radius: 18px;
   background: rgba(0,0,0,.25);
@@ -196,11 +202,7 @@ body{
   display:flex; align-items:center; justify-content:center;
 }
 .tile:hover{transform: translateY(-2px); border-color: rgba(255,255,255,.16); background: rgba(0,0,0,.34)}
-.tile img{
-  width:100%; height:100%;
-  object-fit: cover;
-  display:block;
-}
+.tile img{width:100%; height:100%; object-fit: cover; display:block;}
 .tile .hint{
   position:absolute; left:10px; bottom:10px;
   padding: 4px 8px;
@@ -216,9 +218,7 @@ body{
 }
 .tile:hover .hint{opacity:1; transform: translateY(0)}
 
-/* empty */
 .empty{
-  margin-top: 14px;
   padding: 14px;
   border-radius: 18px;
   border: 1px dashed rgba(255,255,255,.12);
