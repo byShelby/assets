@@ -2,58 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asset Library</title>
-
-  <!-- ✅关键：让 GitHub Pages 项目站点 (/assets/) 的所有相对路径永远正确 -->
-  <base href="./" />
-
+  <meta name="description" content="Browse, preview, and copy direct links for your assets." />
   <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
-  <header class="top">
+  <div class="bg">
+    <div class="glow g1"></div>
+    <div class="glow g2"></div>
+    <div class="glow g3"></div>
+    <div class="noise"></div>
+  </div>
+
+  <header class="topbar">
     <div class="brand">
-      <div class="dot"></div>
-      <div class="name">assets</div>
-      <div class="tag">GitHub Pages</div>
+      <span class="dot"></span>
+      <span class="brandTitle">assets</span>
+      <span class="pill">GitHub Pages</span>
     </div>
 
     <div class="actions">
-      <button class="pill" id="langBtn" type="button">EN</button>
-      <a class="pill primary" id="repoBtn" target="_blank" rel="noopener">Open Repo</a>
+      <button class="chip" id="langBtn" title="Language">EN</button>
+      <a class="chip" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
     </div>
   </header>
 
   <main class="wrap">
-    <h1 id="title">Asset Library</h1>
-    <p class="sub" id="subtitle">Search, preview, and copy direct links.</p>
+    <section class="hero">
+      <h1 id="title">Asset Library</h1>
+      <p id="subtitle">Search, preview, and copy direct links.</p>
 
-    <div class="searchRow">
-      <input id="q" class="search" placeholder="Search: category / group / filename" autocomplete="off" />
-      <div class="status" id="status"></div>
-    </div>
+      <div class="searchRow">
+        <input id="q" class="search" placeholder="Search: category / group / filename" autocomplete="off" />
+        <div class="status" id="status"></div>
+      </div>
+    </section>
 
     <section class="grid" id="grid"></section>
+
+    <footer class="foot">
+      <span id="footLeft">Direct links are GitHub Pages URLs.</span>
+      <a id="manifestLink" href="./data/manifest.json" target="_blank" rel="noreferrer">manifest.json</a>
+    </footer>
   </main>
 
   <!-- Preview Modal -->
   <div class="modal" id="modal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Preview">
-      <div class="modal-top">
-        <div class="modal-title" id="modalTitle"></div>
-        <div class="modal-actions">
-          <button class="btn" id="copyBtn" type="button">Copy link</button>
-          <a class="btn" id="openBtn" target="_blank" rel="noopener">Open</a>
-          <button class="btn" id="closeBtn" type="button">Done</button>
+    <div class="modalBackdrop" id="modalBackdrop"></div>
+    <div class="modalPanel" role="dialog" aria-modal="true">
+      <div class="modalTop">
+        <div class="modalMeta">
+          <div class="fileName" id="modalName">—</div>
+          <div class="filePath" id="modalPath">—</div>
+        </div>
+        <div class="modalBtns">
+          <button class="btn" id="copyBtn">Copy link</button>
+          <a class="btn" id="openBtn" href="#" target="_blank" rel="noreferrer">Open</a>
+          <button class="btn btnGhost" id="closeBtn">Done</button>
         </div>
       </div>
-      <div class="modal-body">
+
+      <div class="modalBody">
         <img id="modalImg" alt="" />
       </div>
     </div>
   </div>
+
+  <div class="toast" id="toast">Copied</div>
 
   <script src="./app.js"></script>
 </body>
