@@ -1,21 +1,41 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>assets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Assets</title>
   <style>
-    body{font-family:system-ui,-apple-system;max-width:720px;margin:40px auto;padding:0 16px}
-    a{display:block;margin:12px 0;font-size:18px}
-    small{color:#666}
+    body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;
+      margin:0;background:#0b0f19;color:#e8eefc}
+    .wrap{max-width:980px;margin:0 auto;padding:48px 18px}
+    .card{background:#121a2a;border:1px solid #1f2a44;border-radius:16px;padding:22px}
+    h1{margin:0 0 6px;font-size:28px}
+    p{margin:8px 0 16px;color:#a9b6d3;line-height:1.6}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+    a.btn{display:block;padding:14px 14px;border-radius:14px;background:#18233a;
+      border:1px solid #263557;color:#e8eefc;text-decoration:none}
+    a.btn:hover{background:#1d2a45}
+    code{background:#0b1222;border:1px solid #1f2a44;padding:2px 6px;border-radius:8px}
+    .small{font-size:13px;color:#93a3c6}
   </style>
 </head>
 <body>
-  <h1>assets</h1>
-  <p><small>Click to open folders</small></p>
+  <div class="wrap">
+    <div class="card">
+      <h1>Assets</h1>
+      <p>这里是我的图片/头像/图标资源库。你可以直接用 <code>直链</code> 作为头像 URL。</p>
 
-  <a href="./avatars/">avatars</a>
-  <a href="./icons/">icons</a>
-  <a href="./photos/">photos</a>
+      <div class="grid">
+        <a class="btn" href="./avatars/">Avatars（头像）</a>
+        <a class="btn" href="./icons/">Icons（图标）</a>
+        <a class="btn" href="./photos/">Photos（照片）</a>
+      </div>
 
+      <p class="small" style="margin-top:18px">
+        示例直链：<br>
+        <code>https://byshelby.github.io/assets/avatars/avatar/avatar-1.jpg</code>
+      </p>
+    </div>
+  </div>
 </body>
 </html>
