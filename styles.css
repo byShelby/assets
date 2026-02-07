@@ -21,9 +21,10 @@ body{
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   background: var(--bg0);
-  overflow: hidden;            /* ✅ 浏览器页面不滚动 */
+  overflow: hidden; /* ✅ 页面不滚动 */
 }
 
+/* Background */
 .bg{
   position:fixed; inset:0;
   background:
@@ -86,24 +87,28 @@ body{
 }
 .chip:hover{ background: var(--chip2); }
 .chip:active{ transform: translateY(1px); }
-.chip-fixed{ width:56px; padding:10px 0; }  /* ✅ 语言切换不抖动 */
+
+/* ✅ 语言按钮固定宽度：切换不抖动 */
+.chip-fixed{ width:56px; padding:10px 0; }
 .chip-text{ font-weight:650; letter-spacing:.5px; }
 
-/* ✅ 关键：应用内部滚动容器（不是浏览器页面滚动） */
+/* ✅ 关键：内容整体“居中悬浮”，并且是纵向排列（上：hero，下：cards） */
 .shell{
   height: 100%;
+  width: 100%;
+  padding: 84px 22px 22px; /* 顶部给 topbar */
   display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding: 84px 22px 22px;     /* ✅ 顶部留给 topbar */
-  overflow: hidden;            /* ✅ shell 自己不滚 */
+  flex-direction: column; /* ✅ 防止左右分栏 */
+  align-items:center;     /* ✅ 居中悬浮 */
+  justify-content:flex-start;
+  gap: 14px;
+  overflow:hidden;        /* ✅ shell 自己不滚动 */
 }
 
-/* ✅ 内容区域允许滚动（隐藏滚动条） */
+/* Hero */
 .hero{
   width: min(980px, 92vw);
-  margin: 0 auto;
-  padding: 10px 6px 12px;
+  padding: 10px 6px 0;
 }
 h1{
   margin: 6px 0 8px;
@@ -119,6 +124,7 @@ h1{
 }
 
 .searchbar{
+  width: min(980px, 92vw);
   display:flex;
   align-items:center;
   gap:10px;
@@ -150,32 +156,30 @@ h1{
   font-size: 12px;
 }
 
-/* ✅ Cards：变成“内部可滚动区域”，这样页面不滚但内容可看 */
+/* ✅ Cards：居中显示 + 不让页面滚动；如果分类很多，Cards 自己滚 */
 .cards{
   width: min(980px, 92vw);
-  margin: 14px auto 0;
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 
-  max-height: calc(100vh - 260px); /* ✅ 保证首屏能看到卡片 */
-  overflow: auto;                  /* ✅ 滚动发生在 cards 区域 */
-  padding-bottom: 14px;
+  flex: 1;                       /* ✅ 占用剩余高度 */
+  min-height: 0;                 /* ✅ 允许内部 overflow 生效 */
+  overflow: auto;                /* ✅ 滚动发生在 cards（不是页面） */
+  padding-bottom: 10px;
   overscroll-behavior: contain;
 }
 
-/* ✅ 隐藏 cards 滚动条但可滚 */
+/* ✅ 隐藏滚动条但可滚 */
 .cards::-webkit-scrollbar{ width:0; height:0; }
 .cards{ scrollbar-width:none; }
 
 @media (max-width: 980px){
-  .cards{
-    grid-template-columns: 1fr;
-    max-height: calc(100vh - 250px);
-  }
+  .cards{ grid-template-columns: 1fr; }
   h1{ font-size: 38px; }
 }
 
+/* Card */
 .card{
   background: var(--glass);
   border: 1px solid var(--border);
@@ -183,7 +187,7 @@ h1{
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
   overflow:hidden;
-  min-height: 360px;  /* ✅ 别再 420，把卡片挤出首屏 */
+  min-height: 420px;
   display:flex;
   flex-direction:column;
 }
@@ -194,11 +198,7 @@ h1{
   justify-content:space-between;
   gap: 10px;
 }
-.card-title{
-  display:flex;
-  flex-direction:column;
-  gap: 2px;
-}
+.card-title{ display:flex; flex-direction:column; gap:2px; }
 .card-title strong{ font-size: 14px; }
 .card-title span{ font-size: 12px; color: var(--muted2); }
 .badge{
@@ -235,10 +235,12 @@ h1{
   flex:1;
   min-height: 0;
 }
+
+/* ✅ 你要的：滚轮上下滚动看图片，图片不重叠 */
 .scroller{
-  height: 240px;       /* ✅ 卡片内部滚动区域 */
-  overflow: auto;      /* ✅ 只滚动这里 */
-  padding-right: 6px;
+  height: 290px;
+  overflow: auto;              /* ✅ 卡片内部滚动 */
+  padding: 10px;
   overscroll-behavior: contain;
   border-radius: var(--radius2);
   border: 1px dashed rgba(255,255,255,.12);
@@ -251,10 +253,10 @@ h1{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  padding: 10px;
   align-content:start;
 }
 
+/* ✅ 固定缩略图高度，绝不重叠 */
 .thumb{
   border-radius: 14px;
   overflow:hidden;
