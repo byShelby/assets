@@ -3,257 +3,341 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>assets</title>
+  <title>你的资源库</title>
 
   <style>
     :root{
-      --bg0:#070A12;
-      --bg1:#0B1226;
-      --card: rgba(255,255,255,.06);
-      --card2: rgba(255,255,255,.08);
-      --bd: rgba(255,255,255,.10);
-      --tx: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --muted2: rgba(255,255,255,.45);
-      --shadow: 0 18px 70px rgba(0,0,0,.45);
-      --r: 18px;
+      --bg:#060a16;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --muted2:rgba(255,255,255,.48);
+      --shadow: 0 30px 120px rgba(0,0,0,.65);
+      --r:22px;
     }
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
+    *{box-sizing:border-box}
     body{
       margin:0;
-      color:var(--tx);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
-        "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Display","SF Pro Text", "PingFang SC","Hiragino Sans GB","Microsoft YaHei", Arial;
+      color:var(--text);
       background:
-        radial-gradient(1000px 600px at 15% 10%, rgba(167,139,250,.22), transparent 60%),
-        radial-gradient(900px 600px at 80% 20%, rgba(59,130,246,.18), transparent 60%),
-        radial-gradient(900px 700px at 50% 85%, rgba(236,72,153,.18), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow-x:hidden;
+        radial-gradient(900px 600px at 12% 18%, rgba(124,58,237,.35), transparent 60%),
+        radial-gradient(700px 520px at 85% 18%, rgba(59,130,246,.28), transparent 60%),
+        radial-gradient(800px 520px at 52% 85%, rgba(236,72,153,.20), transparent 60%),
+        linear-gradient(180deg, #050816, #050816 55%, #040512);
+      min-height:100vh;
     }
 
-    .wrap{ max-width: 1180px; margin: 0 auto; padding: 34px 18px 80px; }
-
-    .top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:14px;
-      margin-bottom: 18px;
+    a{color:inherit}
+    .wrap{
+      width:min(1180px, 92vw);
+      margin: 36px auto 56px;
     }
 
-    .brand{
+    .topbar{
       display:flex;
       align-items:center;
-      gap:10px;
-      opacity:.95;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:22px;
+    }
+    .badge{
+      display:flex; align-items:center; gap:10px;
+      font-size:13px;
+      color:var(--muted);
     }
     .dot{
-      width:10px;height:10px;border-radius:99px;
-      background: linear-gradient(135deg, #a78bfa, #60a5fa);
-      box-shadow: 0 0 20px rgba(167,139,250,.35);
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(124,58,237,.9);
+      box-shadow: 0 0 0 4px rgba(124,58,237,.18);
     }
-    h1{
-      margin:10px 0 6px;
-      font-size: 44px;
-      letter-spacing:.2px;
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size:12px;
+      color:rgba(255,255,255,.78);
     }
-    .sub{
-      margin:0;
-      color: var(--muted);
-      line-height:1.6;
-      max-width: 760px;
-    }
-
     .btn{
-      appearance:none;
-      border:1px solid var(--bd);
+      border:1px solid var(--line);
       background: rgba(255,255,255,.06);
-      color: var(--tx);
       padding: 10px 14px;
       border-radius: 999px;
-      cursor:pointer;
+      color: rgba(255,255,255,.9);
       text-decoration:none;
+      font-size: 12px;
       display:inline-flex;
-      gap:8px;
       align-items:center;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.20);
+      gap:8px;
+      cursor:pointer;
     }
     .btn:hover{ background: rgba(255,255,255,.10); }
 
-    .searchRow{
-      margin: 18px 0 20px;
-      display:flex;
-      gap:10px;
+    h1{
+      margin: 0 0 8px;
+      font-size: 44px;
+      letter-spacing: -.02em;
+      line-height: 1.05;
     }
-    .search{
-      flex:1;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 12px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--bd);
-      background: rgba(0,0,0,.22);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
+    .subtitle{
+      margin:0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
     }
-    .search kbd{
-      color: var(--muted2);
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      border-bottom-color: rgba(255,255,255,.08);
-      padding: 4px 8px;
-      border-radius: 10px;
-      font-size: 12px;
-    }
-    input{
-      border:0;
-      outline:0;
-      background: transparent;
-      color: var(--tx);
-      font-size: 15px;
-      width:100%;
-    }
-    input::placeholder{ color: var(--muted2); }
 
-    .grid3{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+    .search{
+      margin: 18px 0 24px;
+      position: relative;
     }
-    @media (max-width: 980px){
-      .grid3{ grid-template-columns: 1fr; }
+    .search input{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.88);
+      padding: 14px 16px 14px 44px;
+      border-radius: 999px;
+      outline:none;
+      font-size: 14px;
+      transition: .15s;
+    }
+    .search input:focus{
+      border-color: rgba(124,58,237,.38);
+      box-shadow: 0 0 0 6px rgba(124,58,237,.14);
+    }
+    .search .icon{
+      position:absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width:18px;
+      height:18px;
+      opacity:.7;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 960px){
+      .grid{ grid-template-columns: 1fr; }
       h1{ font-size: 36px; }
-      .top{ flex-direction:column; align-items:flex-start; }
     }
 
     .card{
-      border: 1px solid var(--bd);
+      border:1px solid var(--line);
       background: var(--card);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
+      border-radius: var(--r);
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
       overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      min-height: 480px;
-      max-height: 540px; /* 关键：卡片固定高度，内部滚动 */
-      backdrop-filter: blur(14px);
     }
     .cardHead{
-      padding: 16px 16px 10px;
+      padding: 16px 16px 12px;
       border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .titleRow{
       display:flex;
-      justify-content:space-between;
       align-items:flex-start;
-      gap:10px;
+      justify-content:space-between;
+      gap: 10px;
     }
-    .card h2{
-      margin:0;
-      font-size: 18px;
-      letter-spacing:.2px;
+    .cardTitle{
+      font-size: 16px;
+      margin: 0;
     }
-    .desc{
-      margin:6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height:1.5;
-    }
-
-    .chips{
-      margin-top: 10px;
-      display:flex;
-      gap: 8px;
-      overflow-x:auto;      /* 关键：横向可滑 */
-      white-space:nowrap;
-      padding-bottom: 8px;
-    }
-    .chip{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.78);
+    .cardDesc{
+      margin: 6px 0 0;
       font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .count{
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
       padding: 6px 10px;
       border-radius: 999px;
-      cursor:pointer;
-      user-select:none;
-      flex: 0 0 auto;
+      white-space:nowrap;
     }
-    .chip:hover{ background: rgba(255,255,255,.08); }
 
     .cardBody{
       padding: 14px 16px 16px;
-      overflow-y:auto;      /* 关键：内部可上下滚动 */
+      max-height: 520px;
+      overflow:auto;
     }
 
-    .thumbGrid{
+    /* ✅ 隐藏滚动条（但可滚动） */
+    .chips, .cardBody{
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .chips::-webkit-scrollbar,
+    .cardBody::-webkit-scrollbar{
+      width:0;
+      height:0;
+    }
+
+    .chips{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .chip{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.80);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select:none;
+      white-space:nowrap;
+      transition: .12s;
+    }
+    .chip:hover{ background: rgba(255,255,255,.09); }
+
+    .thumbs{
       display:grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
     }
-    .thumbBox{
-      position:relative;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      overflow:hidden;
-      background: rgba(0,0,0,.20);
-      cursor:pointer;
-      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+    @media (max-width: 960px){
+      .thumbs{ grid-template-columns: repeat(3, 1fr); }
     }
-    .thumbBox:hover{ border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+
     .thumb{
-      width:100%;
+      position:relative;
       aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      cursor:pointer;
+      transition: .12s;
+    }
+    .thumb:hover{
+      transform: translateY(-1px);
+      border-color: rgba(124,58,237,.28);
+      box-shadow: 0 14px 60px rgba(0,0,0,.35);
+    }
+    .thumb img{
+      width:100%;
+      height:100%;
       object-fit: cover;
       display:block;
     }
-    .thumbLabel{
+    .thumb .label{
       position:absolute;
-      left: 10px;
-      bottom: 10px;
-      right: 10px;
+      left:10px;
+      bottom:10px;
+      padding: 6px 9px;
+      border-radius: 999px;
       font-size: 11px;
-      color: rgba(255,255,255,.72);
-      text-shadow: 0 2px 12px rgba(0,0,0,.8);
+      color: rgba(255,255,255,.9);
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      max-width: calc(100% - 20px);
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
-      pointer-events:none;
     }
 
-    .empty{
-      color: var(--muted2);
-      font-size: 13px;
-      padding: 10px 2px;
-      line-height:1.6;
-    }
-
+    /* Toast */
     .toast{
-      position: fixed;
+      position:fixed;
+      bottom: 18px;
       left: 50%;
-      bottom: 22px;
       transform: translateX(-50%);
-      padding: 10px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.65);
+      background: rgba(17,24,39,.85);
+      border: 1px solid rgba(255,255,255,.12);
       color: rgba(255,255,255,.92);
-      box-shadow: 0 20px 80px rgba(0,0,0,.55);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      box-shadow: 0 20px 80px rgba(0,0,0,.5);
+      opacity:0;
+      pointer-events:none;
+      transition: .18s;
       backdrop-filter: blur(12px);
       z-index: 9999;
-      display:none;
-      max-width: 90vw;
-      text-align:center;
-      font-size: 13px;
     }
-    .hint{
-      margin-top: 12px;
-      color: var(--muted2);
+    .toast.show{ opacity: 1; }
+
+    /* ✅ 预览弹窗 */
+    .modal{ position:fixed; inset:0; display:none; z-index:10000; }
+    .modal.show{ display:block; }
+    .modalMask{
+      position:absolute; inset:0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(10px);
+    }
+    .modalCard{
+      position:relative;
+      width: min(980px, 92vw);
+      height: min(78vh, 720px);
+      margin: 6vh auto 0;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,14,26,.78);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalTop{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .modalTitle{
+      font-size: 13px; color: rgba(255,255,255,.78);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      max-width: 44vw;
+    }
+    .modalBtns{ display:flex; gap:8px; }
+    .mBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.9);
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor:pointer;
+      text-decoration:none;
+      font-size: 12px;
+    }
+    .mBtn:hover{ background: rgba(255,255,255,.10); }
+    .mBtnClose{ background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25); }
+    .mBtnClose:hover{ background: rgba(239,68,68,.18); }
+
+    .modalBody{
+      height: calc(100% - 110px);
+      display:flex; align-items:center; justify-content:center;
+      padding: 14px;
+    }
+    .modalBody img{
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      object-fit: contain;
+    }
+    .modalBottom{
+      padding: 10px 14px;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+    #modalLink{
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: rgba(255,255,255,.88);
+      padding: 10px 12px;
+      border-radius: 14px;
       font-size: 12px;
     }
   </style>
@@ -261,241 +345,266 @@
 
 <body>
   <div class="wrap">
-
-    <div class="top">
-      <div>
-        <div class="brand"><span class="dot"></span><span style="color:var(--muted)">assets · GitHub Pages</span></div>
-        <h1>你的资源库</h1>
-        <p class="sub">点任意缩略图或文件名即可复制直链。卡片内部可滚动（你有 24 张头像也能滑动选）。</p>
-        <div class="hint">提示：键盘按 <b>/</b> 可以快速聚焦搜索框。</div>
+    <div class="topbar">
+      <div class="badge">
+        <span class="dot"></span>
+        <span class="pill">assets · GitHub Pages</span>
       </div>
-      <a class="btn" id="openRepo" target="_blank" rel="noreferrer">Open Repo</a>
+      <a class="btn" id="openRepo" href="#" target="_blank" rel="noreferrer">Open Repo</a>
     </div>
 
-    <div class="searchRow">
-      <div class="search">
-        <kbd>/</kbd>
-        <input id="q" placeholder="搜索文件名，比如：avatar-1 / logo / icon..." />
-      </div>
+    <h1>你的资源库</h1>
+    <p class="subtitle">
+      像 Spaceship 那样：极简深色、渐变氛围、卡片分类。点图片可放大预览，预览里可复制直链。
+    </p>
+
+    <div class="search">
+      <svg class="icon" viewBox="0 0 24 24" fill="none">
+        <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="rgba(255,255,255,.7)" stroke-width="2"/>
+        <path d="M21 21l-4.3-4.3" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input id="q" placeholder="搜索文件名，比如：avatar-1 / logo / icon..." />
     </div>
 
-    <div class="grid3">
-      <!-- Avatars -->
-      <section class="card" data-group="avatars">
+    <div class="grid">
+      <section class="card" id="card-avatars">
         <div class="cardHead">
-          <div class="titleRow">
-            <div>
-              <h2>Avatars</h2>
-              <div class="desc">头像（适合网站头像链接）</div>
-            </div>
+          <div>
+            <h3 class="cardTitle">Avatars</h3>
+            <p class="cardDesc">头像（适合网站填头像链接）</p>
           </div>
+          <div class="count" id="count-avatars">0</div>
+        </div>
+        <div class="cardBody">
           <div class="chips" id="chips-avatars"></div>
-        </div>
-        <div class="cardBody">
-          <div class="thumbGrid" id="grid-avatars"></div>
-          <div class="empty" id="empty-avatars" style="display:none">这里还没图片。把头像上传到 <b>avatars/</b> 下面即可。</div>
+          <div class="thumbs" id="thumbs-avatars"></div>
         </div>
       </section>
 
-      <!-- Icons -->
-      <section class="card" data-group="icons">
+      <section class="card" id="card-icons">
         <div class="cardHead">
-          <div class="titleRow">
-            <div>
-              <h2>Icons</h2>
-              <div class="desc">图标（小尺寸 / favicon / UI）</div>
-            </div>
+          <div>
+            <h3 class="cardTitle">Icons</h3>
+            <p class="cardDesc">图标（小尺寸 / favicon / UI）</p>
           </div>
+          <div class="count" id="count-icons">0</div>
+        </div>
+        <div class="cardBody">
           <div class="chips" id="chips-icons"></div>
-        </div>
-        <div class="cardBody">
-          <div class="thumbGrid" id="grid-icons"></div>
-          <div class="empty" id="empty-icons" style="display:none">这里还没图片。把图标上传到 <b>icons/</b> 下面即可。</div>
+          <div class="thumbs" id="thumbs-icons"></div>
         </div>
       </section>
 
-      <!-- Photos -->
-      <section class="card" data-group="photos">
+      <section class="card" id="card-photos">
         <div class="cardHead">
-          <div class="titleRow">
-            <div>
-              <h2>Photos</h2>
-              <div class="desc">照片（展示图 / 背景图）</div>
-            </div>
+          <div>
+            <h3 class="cardTitle">Photos</h3>
+            <p class="cardDesc">照片（展示图 / 背景图）</p>
           </div>
-          <div class="chips" id="chips-photos"></div>
+          <div class="count" id="count-photos">0</div>
         </div>
         <div class="cardBody">
-          <div class="thumbGrid" id="grid-photos"></div>
-          <div class="empty" id="empty-photos" style="display:none">这里还没图片。把照片上传到 <b>photos/</b> 下面即可。</div>
+          <div class="chips" id="chips-photos"></div>
+          <div class="thumbs" id="thumbs-photos"></div>
         </div>
       </section>
     </div>
   </div>
 
-  <div class="toast" id="toast">已复制链接 ✅</div>
+  <div class="toast" id="toast">已复制</div>
+
+  <!-- ✅ 预览弹窗 -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modalMask" id="modalMask"></div>
+
+    <div class="modalCard" role="dialog" aria-modal="true">
+      <div class="modalTop">
+        <div class="modalTitle" id="modalTitle">Preview</div>
+        <div class="modalBtns">
+          <button class="mBtn" id="copyBtn">复制直链</button>
+          <a class="mBtn" id="openBtn" target="_blank" rel="noreferrer">新窗口打开</a>
+          <button class="mBtn mBtnClose" id="closeBtn">关闭</button>
+        </div>
+      </div>
+
+      <div class="modalBody">
+        <img id="modalImg" alt="preview" />
+      </div>
+
+      <div class="modalBottom">
+        <input id="modalLink" readonly />
+      </div>
+    </div>
+  </div>
 
   <script>
-    // ====== 你只需要维护这三个列表 ======
-    // 按你现在 repo 的真实路径来：比如 avatars/avatar/avatar-1.jpg 就照写
-    const DATA = {
-      avatars: [
-        // 示例：你可以把 24 张都写在这里（也可以用 index.json 方式，先别折腾）
-        // "avatars/avatar/avatar-1.jpg",
-      ],
-      icons: [
-        // "icons/icon-1.svg",
-        // "icons/icon-2.png",
-      ],
-      photos: [
-        // "photos/photo-1.jpg",
-        // "photos/photo-2.jpg",
-      ]
+    // ====== 基础配置 ======
+    // GitHub Pages 上的 BASE 是当前站点根路径（例如 https://byshelby.github.io/assets/）
+    const BASE = location.origin + location.pathname.replace(/\/index\.html?$/, "/");
+
+    // 你每个目录下的索引文件（你现在在编辑的那种）
+    const INDEX = {
+      avatars: "avatars/index.json",
+      icons:   "icons/index.json",
+      photos:  "photos/index.json",
     };
 
-    // 自动：如果你已经创建了 photos/index.json 这种数组文件，
-    // 你也可以取消注释下面这段，让它自动读取（不想折腾就别动）
-    async function tryLoadIndexJson(group){
-      const p = group + "/index.json";
-      try{
-        const res = await fetch(p, { cache: "no-store" });
-        if(!res.ok) return null;
-        const arr = await res.json();
-        if(!Array.isArray(arr)) return null;
-        return arr.map(x => x.startsWith(group+"/") ? x : (group + "/" + x));
-      }catch(e){
-        return null;
-      }
+    // Repo 链接（自动根据当前路径推测，也可不管）
+    const openRepo = document.getElementById("openRepo");
+    openRepo.href = "https://github.com/" + location.pathname.split("/").filter(Boolean).slice(0,2).join("/");
+
+    // ====== Toast ======
+    const toast = document.getElementById("toast");
+    let toastTimer = null;
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toast.classList.remove("show"), 1100);
     }
-
-    // GitHub Pages 直链基址：例如 https://byshelby.github.io/assets/
-    const BASE = location.origin + location.pathname.replace(/\/index\.html$/, "/");
-
-    function toast(msg){
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.style.display = "block";
-      clearTimeout(window.__t);
-      window.__t = setTimeout(()=> el.style.display="none", 1200);
-    }
-
     async function copyText(text){
       try{
         await navigator.clipboard.writeText(text);
-        toast("已复制链接 ✅");
+        showToast("已复制直链");
       }catch(e){
-        toast("复制失败：已弹出链接");
-        alert(text);
+        // 兼容旧浏览器
+        const t = document.createElement("textarea");
+        t.value = text;
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        t.remove();
+        showToast("已复制直链");
       }
     }
 
-    function isImage(path){
-      return /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(path);
+    // ====== 预览弹窗 ======
+    const modal = document.getElementById("modal");
+    const modalMask = document.getElementById("modalMask");
+    const closeBtn = document.getElementById("closeBtn");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalLink = document.getElementById("modalLink");
+    const copyBtn = document.getElementById("copyBtn");
+    const openBtn = document.getElementById("openBtn");
+    let currentUrl = "";
+
+    function openModal(name, url){
+      currentUrl = url;
+      modalTitle.textContent = name;
+      modalImg.src = url;
+      modalLink.value = url;
+      openBtn.href = url;
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden","false");
+    }
+    function closeModal(){
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden","true");
+      modalImg.src = "";
+      currentUrl = "";
+    }
+    modalMask.onclick = closeModal;
+    closeBtn.onclick = closeModal;
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape" && modal.classList.contains("show")) closeModal();
+    });
+    copyBtn.onclick = () => currentUrl && copyText(currentUrl);
+    modalLink.onclick = () => modalLink.select();
+
+    // ====== 渲染逻辑 ======
+    const q = document.getElementById("q");
+    const state = {
+      avatars: [],
+      icons: [],
+      photos: [],
+    };
+
+    function el(id){ return document.getElementById(id); }
+
+    function fileName(path){
+      const s = path.split("/").pop() || path;
+      return s;
     }
 
-    function renderGroup(group, list){
-      const chips = document.getElementById("chips-" + group);
-      const grid  = document.getElementById("grid-" + group);
-      const empty = document.getElementById("empty-" + group);
+    function renderSection(key){
+      const items = state[key] || [];
+      const keyword = (q.value || "").trim().toLowerCase();
 
+      const filtered = keyword
+        ? items.filter(p => fileName(p).toLowerCase().includes(keyword) || p.toLowerCase().includes(keyword))
+        : items;
+
+      el("count-"+key).textContent = filtered.length;
+
+      // chips（点一下复制直链）
+      const chips = el("chips-"+key);
       chips.innerHTML = "";
-      grid.innerHTML = "";
-
-      const items = (list || []).filter(Boolean);
-
-      if(items.length === 0){
-        empty.style.display = "block";
-        return;
-      }
-      empty.style.display = "none";
-
-      // chips（文件名）
-      for(const p of items){
-        const name = p.split("/").pop();
+      filtered.slice(0, 40).forEach(p=>{
         const c = document.createElement("div");
         c.className = "chip";
-        c.textContent = name;
-        c.title = "点击复制直链";
-        c.dataset.path = p;
+        c.textContent = fileName(p);
         c.onclick = () => copyText(BASE + p);
         chips.appendChild(c);
-      }
+      });
 
-      // thumbs（图片）
-      for(const p of items){
-        if(!isImage(p)) continue;
-        const name = p.split("/").pop();
+      // thumbs（点一下放大预览）
+      const thumbs = el("thumbs-"+key);
+      thumbs.innerHTML = "";
+      filtered.slice(0, 48).forEach(p=>{
+        const name = fileName(p);
+        const url = BASE + p;
 
         const box = document.createElement("div");
-        box.className = "thumbBox";
-        box.title = "点击复制直链";
-        box.dataset.path = p;
-        box.onclick = () => copyText(BASE + p);
+        box.className = "thumb";
+        box.title = name;
 
         const img = document.createElement("img");
-        img.className = "thumb";
         img.loading = "lazy";
-        img.src = p;
-        img.alt = name;
+        img.src = url;
 
         const label = document.createElement("div");
-        label.className = "thumbLabel";
+        label.className = "label";
         label.textContent = name;
 
         box.appendChild(img);
         box.appendChild(label);
-        grid.appendChild(box);
+
+        box.onclick = () => openModal(name, url);
+        thumbs.appendChild(box);
+      });
+    }
+
+    function renderAll(){
+      renderSection("avatars");
+      renderSection("icons");
+      renderSection("photos");
+    }
+
+    async function loadIndex(key, url){
+      try{
+        const res = await fetch(url, { cache: "no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        const arr = await res.json();
+        // 允许两种写法：
+        // 1) ["photos/photo-1.jpg", ...]
+        // 2) { "items": [...] }
+        const items = Array.isArray(arr) ? arr : (arr.items || []);
+        state[key] = items.filter(Boolean);
+      }catch(e){
+        state[key] = [];
       }
     }
 
-    // 搜索
-    function applySearch(q){
-      q = (q || "").trim().toLowerCase();
-      for(const group of ["avatars","icons","photos"]){
-        const list = (window.__all[group] || []);
-        if(!q){
-          renderGroup(group, list);
-        }else{
-          const filtered = list.filter(p => p.toLowerCase().includes(q));
-          renderGroup(group, filtered);
-        }
-      }
-    }
+    q.addEventListener("input", ()=>renderAll());
 
-    // 快捷键：/ 聚焦搜索
-    document.addEventListener("keydown", (e)=>{
-      if(e.key === "/" && document.activeElement.tagName !== "INPUT"){
-        e.preventDefault();
-        document.getElementById("q").focus();
-      }
-    });
-
-    // Open Repo 按钮：自动指向你当前 repo（如果是 Pages 部署）
-    (function(){
-      const btn = document.getElementById("openRepo");
-      // 你也可以手动改成你的 repo 地址
-      btn.href = "https://github.com/byShelby/assets";
-    })();
-
-    // 初始化：优先读取 index.json（有就用），否则用 DATA
     (async function init(){
-      window.__all = { avatars:[], icons:[], photos:[] };
-
-      for(const group of ["avatars","icons","photos"]){
-        const fromJson = await tryLoadIndexJson(group);
-        if(fromJson && fromJson.length){
-          window.__all[group] = fromJson;
-        }else{
-          window.__all[group] = (DATA[group] || []);
-        }
-      }
-
-      // 首次渲染
-      applySearch("");
-
-      // 绑定搜索
-      const input = document.getElementById("q");
-      input.addEventListener("input", () => applySearch(input.value));
+      await Promise.all([
+        loadIndex("avatars", BASE + INDEX.avatars),
+        loadIndex("icons",   BASE + INDEX.icons),
+        loadIndex("photos",  BASE + INDEX.photos),
+      ]);
+      renderAll();
     })();
   </script>
 </body>
