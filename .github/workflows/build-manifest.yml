@@ -1,0 +1,36 @@
+name: Build manifest.json for assets
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build manifest
+        run: node scripts/build-manifest.mjs
+
+      - name: Commit manifest if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/manifest.json
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "chore: update manifest.json"
+            git push
+          fi
