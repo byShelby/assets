@@ -1,227 +1,284 @@
-(() => {
-  const $ = (s) => document.querySelector(s);
+:root {
+  --bg1: #0b0f1a;
+  --bg2: #071018;
+  --card: rgba(255, 255, 255, 0.06);
+  --card2: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.10);
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.62);
+  --shadow: 0 22px 70px rgba(0,0,0,0.55);
+  --radius: 22px;
+}
 
-  // ✅ 自动适配：无论你 Pages 是 /assets/ 还是自定义域名，都不会错
-  const BASE_URL = new URL("./", window.location.href); // e.g. https://byshelby.github.io/assets/
-  const MANIFEST_URL = new URL("data/manifest.json", BASE_URL).toString();
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--text);
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(153, 69, 255, 0.35), transparent 55%),
+              radial-gradient(900px 700px at 85% 20%, rgba(0, 180, 255, 0.25), transparent 55%),
+              radial-gradient(900px 700px at 45% 95%, rgba(255, 64, 170, 0.25), transparent 60%),
+              linear-gradient(180deg, var(--bg1), var(--bg2));
+  overflow-x: hidden;
+}
 
-  // 你的 GitHub 仓库信息（Raw 链接需要）
-  const OWNER = "byShelby";
-  const REPO  = "assets";
-  const BRANCH = "main";
+.bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  filter: blur(60px) saturate(120%);
+  opacity: 0.75;
+}
 
-  const i18n = {
-    zh: {
-      title: "你的资源库",
-      subtitle: "干净、可复制直链、可预览。",
-      searchPH: "搜索：avatar / icon / photo",
-      empty: "这个分类还没有资源",
-      copied: "已复制",
-      copyPages: "复制 Pages 直链",
-      copyRaw: "复制 Raw 直链",
-      open: "打开",
-      manifestFail: "资源索引加载失败"
-    },
-    en: {
-      title: "Asset Library",
-      subtitle: "Clean. Copyable links. Previewable.",
-      searchPH: "Search: avatar / icon / photo",
-      empty: "No assets in this category",
-      copied: "Copied",
-      copyPages: "Copy Pages Link",
-      copyRaw: "Copy Raw Link",
-      open: "Open",
-      manifestFail: "Manifest load failed"
-    }
-  };
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.05));
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
 
-  let lang = "zh";
+.brand { display: flex; gap: 10px; align-items: center; }
+.dot {
+  width: 10px; height: 10px; border-radius: 999px;
+  background: rgba(120, 255, 200, 0.95);
+  box-shadow: 0 0 16px rgba(120,255,200,0.55);
+}
+.brand-title { font-weight: 650; letter-spacing: 0.2px; opacity: 0.95; }
 
-  const repoBtn = $("#repoBtn");
-  repoBtn.href = `https://github.com/${OWNER}/${REPO}`;
+.wrap { max-width: 1120px; margin: 0 auto; padding: 32px 18px 60px; }
+.hero h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 48px); letter-spacing: -0.02em; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-  const langBtn = $("#langBtn");
-  langBtn.addEventListener("click", () => {
-    lang = (lang === "zh") ? "en" : "zh";
-    langBtn.textContent = (lang === "zh") ? "EN" : "中文";
-    applyLang();
-    render(lastManifest);
-  });
+.searchRow {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
 
-  function applyLang(){
-    $("#title").textContent = i18n[lang].title;
-    $("#subtitle").textContent = i18n[lang].subtitle;
-    $("#q").placeholder = i18n[lang].searchPH;
-    $("#copyPages").textContent = i18n[lang].copyPages;
-    $("#copyRaw").textContent = i18n[lang].copyRaw;
-    $("#openNew").textContent = i18n[lang].open;
-  }
-  applyLang();
+.search {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.20);
+  color: var(--text);
+  outline: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+}
+.search::placeholder { color: rgba(255,255,255,0.45); }
 
-  function pagesLink(path){
-    // ✅ 永远正确：用 BASE_URL 拼
-    return new URL(path, BASE_URL).toString();
-  }
-  function rawLink(path){
-    // ✅ 自动生成 Raw：无需你手动编辑
-    return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`;
-  }
+.status {
+  min-width: 160px;
+  text-align: right;
+  font-size: 13px;
+  color: rgba(255,255,255,0.60);
+}
 
-  async function copy(text){
-    await navigator.clipboard.writeText(text);
-  }
+.panel {
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 
-  // Modal
-  const modal = $("#modal");
-  const modalImg = $("#modalImg");
-  const modalName = $("#modalName");
-  const modalPath = $("#modalPath");
-  const openNew = $("#openNew");
-  const copyPagesBtn = $("#copyPages");
-  const copyRawBtn = $("#copyRaw");
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 6px 4px 14px;
+}
 
-  function openModal(assetPath){
-    const pUrl = pagesLink(assetPath);
-    const rUrl = rawLink(assetPath);
+.chip, .btn {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.20);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
 
-    modal.setAttribute("aria-hidden", "false");
-    modalImg.src = pUrl;
-    modalName.textContent = assetPath.split("/").pop();
-    modalPath.textContent = assetPath;
+.chip:hover, .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
+.chip.active {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.22);
+}
 
-    openNew.href = pUrl;
+.btn { padding: 10px 14px; }
+.btn.ghost { background: rgba(0,0,0,0.12); }
+.top-actions { display: flex; gap: 10px; align-items: center; }
 
-    copyPagesBtn.onclick = async () => {
-      await copy(pUrl);
-      copyPagesBtn.textContent = i18n[lang].copied;
-      setTimeout(()=> copyPagesBtn.textContent = i18n[lang].copyPages, 900);
-    };
-    copyRawBtn.onclick = async () => {
-      await copy(rUrl);
-      copyRawBtn.textContent = i18n[lang].copied;
-      setTimeout(()=> copyRawBtn.textContent = i18n[lang].copyRaw, 900);
-    };
-  }
-  function closeModal(){
-    modal.setAttribute("aria-hidden", "true");
-    modalImg.src = "";
-  }
-  $("#modalClose").addEventListener("click", closeModal);
-  modal.addEventListener("click", (e) => {
-    if (e.target?.dataset?.close) closeModal();
-  });
-  window.addEventListener("keydown", (e)=> {
-    if (e.key === "Escape") closeModal();
-  });
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 8px 4px 4px;
+}
+@media (max-width: 980px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 720px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 420px) { .grid { grid-template-columns: repeat(1, 1fr); } }
 
-  // Render
-  const grid = $("#grid");
-  const q = $("#q");
-  const status = $("#status");
+.card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+}
 
-  let lastManifest = null;
+.thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.01);
+  transition: transform .18s ease;
+}
+.card:hover .thumb { transform: scale(1.05); }
 
-  q.addEventListener("input", () => render(lastManifest));
+.meta {
+  position: absolute;
+  left: 10px; right: 10px; bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
 
-  function normalizeList(groups){
-    // groups: {root:[...], people:[...]} -> flatten with group name
-    const out = [];
-    for (const [group, arr] of Object.entries(groups || {})){
-      (arr || []).forEach(p => out.push({ group, path: p }));
-    }
-    return out;
-  }
+.tag {
+  pointer-events: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.38);
+  border: 1px solid rgba(255,255,255,0.14);
+  font-size: 12px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  function render(manifest){
-    if(!manifest) return;
-    const kw = (q.value || "").trim().toLowerCase();
+.badge {
+  pointer-events: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 12px;
+}
 
-    grid.innerHTML = "";
+.empty {
+  padding: 22px 14px;
+  color: rgba(255,255,255,0.55);
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.12);
+}
 
-    const cats = manifest.categories || {};
-    const entries = Object.entries(cats);
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 20;
+}
+.modal.show { display: block; }
 
-    for (const [catName, catObj] of entries){
-      const groups = catObj.groups || {};
-      const list = normalizeList(groups);
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(12px);
+}
 
-      const filtered = kw
-        ? list.filter(x => (x.path + " " + x.group + " " + catName).toLowerCase().includes(kw))
-        : list;
+.modal-card {
+  position: relative;
+  width: min(1100px, calc(100vw - 28px));
+  margin: 70px auto 30px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(20, 20, 30, 0.85);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
 
-      const card = document.createElement("div");
-      card.className = "card";
+.modal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.modal-title { display: flex; flex-direction: column; gap: 4px; }
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-      const head = document.createElement("div");
-      head.className = "cardHead";
+.modal-body {
+  position: relative;
+  padding: 10px;
+}
 
-      const left = document.createElement("div");
-      const title = document.createElement("div");
-      title.className = "cardTitle";
-      title.textContent = catName[0].toUpperCase() + catName.slice(1);
+.viewer {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
+  height: min(72vh, 720px);
+  display: grid;
+  place-items: center;
+}
 
-      const sub = document.createElement("div");
-      sub.className = "cardSub";
-      sub.textContent = `${catObj.total || 0}`;
+.viewer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
 
-      left.appendChild(title);
-      left.appendChild(sub);
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.28);
+  color: var(--text);
+  font-size: 28px;
+  line-height: 46px;
+  cursor: pointer;
+}
+.navBtn.left { left: 18px; }
+.navBtn.right { right: 18px; }
+.navBtn:hover { background: rgba(255,255,255,0.10); }
 
-      const badge = document.createElement("div");
-      badge.className = "badge";
-      badge.textContent = "root"; // 你现在不想复杂分组，就显示 root（后面你要分类我再给你升级）
-
-      head.appendChild(left);
-      head.appendChild(badge);
-
-      card.appendChild(head);
-
-      if (filtered.length === 0){
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = i18n[lang].empty;
-        card.appendChild(empty);
-      } else {
-        const tg = document.createElement("div");
-        tg.className = "thumbGrid";
-
-        // 展示前 12 个缩略图（避免页面炸裂）；搜索时也是这样
-        const show = filtered.slice(0, 12);
-
-        for (const item of show){
-          const btn = document.createElement("div");
-          btn.className = "thumb";
-          const img = document.createElement("img");
-          img.loading = "lazy";
-          img.src = pagesLink(item.path);
-          img.alt = item.path;
-          btn.appendChild(img);
-          btn.addEventListener("click", () => openModal(item.path));
-          tg.appendChild(btn);
-        }
-        card.appendChild(tg);
-      }
-
-      grid.appendChild(card);
-    }
-
-    status.textContent = "";
-  }
-
-  async function main(){
-    status.textContent = "Loading…";
-    try{
-      const res = await fetch(MANIFEST_URL, { cache: "no-store" });
-      if(!res.ok) throw new Error("manifest http " + res.status);
-      const manifest = await res.json();
-      lastManifest = manifest;
-      status.textContent = "";
-      render(manifest);
-    }catch(err){
-      console.error(err);
-      status.textContent = i18n[lang].manifestFail + " · " + MANIFEST_URL;
-    }
-  }
-
-  main();
-})();
+/* Hide scrollbar thumb (still scrollable) */
+* {
+  scrollbar-width: none;         /* Firefox */
+}
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
