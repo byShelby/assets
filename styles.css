@@ -482,3 +482,68 @@ h1 {
   line-height: 1 !important;
   min-width: 112px !important;          /* 稳定宽度 */
 }
+/* ========= Premium micro-interactions (NO layout changes) ========= */
+
+/* Buttons / chips: hover + press + focus ring */
+.chip, .statusPill, .btn, .iconBtn {
+  transition: transform .12s ease, filter .18s ease, background .18s ease, border-color .18s ease;
+}
+.chip:hover, .statusPill:hover, .btn:hover, .iconBtn:hover {
+  filter: brightness(1.06);
+}
+.chip:active, .statusPill:active, .btn:active, .iconBtn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.chip:focus-visible, .statusPill:focus-visible, .btn:focus-visible, .iconBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
+
+/* Thumbnails: hover + press feedback */
+.thumb {
+  transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
+}
+.thumb:hover {
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+.thumb:active {
+  transform: translateY(0px) scale(0.99);
+  filter: brightness(0.98);
+}
+
+/* Keyboard focus on thumb (accessibility) */
+.thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
+
+/* Selected state (if JS adds .selected on click) */
+.thumb.selected {
+  border-color: rgba(124,58,237,0.55);
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.25), 0 18px 60px rgba(0,0,0,0.40);
+}
+.thumb.selected::after {
+  content: "Selected";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,0.92);
+  background: rgba(124,58,237,0.28);
+  border: 1px solid rgba(124,58,237,0.35);
+  backdrop-filter: blur(12px);
+}
+
+/* Toast stronger feedback when shown */
+.toast {
+  transform: translateX(-50%) translateY(6px);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0px);
+}
