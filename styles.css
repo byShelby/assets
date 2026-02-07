@@ -1,346 +1,380 @@
-/* =========================
-   Asset Library - styles.css
-   (Replace entire file)
-   ========================= */
-
+/* ===== Base ===== */
 :root{
-  --bg0: #06070b;
-  --glass: rgba(255,255,255,.06);
-  --glass2: rgba(255,255,255,.10);
-  --stroke: rgba(255,255,255,.10);
-  --stroke2: rgba(255,255,255,.14);
-  --text: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.62);
-  --muted2: rgba(255,255,255,.45);
-  --shadow: 0 20px 60px rgba(0,0,0,.45);
-  --r16: 16px;
-  --r20: 20px;
-  --r24: 24px;
+  --bg1:#0b0e14;
+  --bg2:#070a0f;
+  --glass: rgba(255,255,255,0.07);
+  --glass2: rgba(255,255,255,0.10);
+  --border: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --muted2: rgba(255,255,255,0.45);
+  --shadow: 0 18px 70px rgba(0,0,0,0.55);
+  --r: 22px;
+  --r2: 16px;
 }
 
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
+html, body{ height:100%; }
 body{
   margin:0;
-  color:var(--text);
-  font: 14px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  background: radial-gradient(1200px 800px at 15% 15%, rgba(140,70,255,.45), transparent 60%),
-              radial-gradient(1100px 900px at 85% 30%, rgba(0,170,255,.30), transparent 62%),
-              radial-gradient(900px 700px at 55% 90%, rgba(255,60,200,.18), transparent 60%),
-              var(--bg0);
-  overflow-x:hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--text);
+  background: radial-gradient(1200px 700px at 15% 15%, rgba(128,52,255,0.35), transparent 60%),
+              radial-gradient(1200px 700px at 85% 20%, rgba(0,200,255,0.18), transparent 55%),
+              radial-gradient(900px 600px at 55% 85%, rgba(255,0,120,0.18), transparent 60%),
+              linear-gradient(180deg, var(--bg1), var(--bg2));
+  overflow: hidden; /* 关键：页面不滚，让卡片内部滚 */
 }
 
-a{ color:inherit; text-decoration:none; }
-button,input{ font:inherit; color:inherit; }
-::selection{ background: rgba(140,70,255,.35); }
+.bg{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  filter: blur(22px) saturate(1.1);
+  opacity: 0.95;
+}
 
-.container{
+/* ===== Center floating shell ===== */
+.shell{
   width: min(1100px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 34px 0 60px;
+  margin: 22px auto 40px;
+  padding: 22px 22px 26px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  position: relative;
 }
 
-/* Top bar */
+@media (max-width: 860px){
+  body{ overflow:auto; } /* 小屏允许页面滚动 */
+  .shell{ margin: 14px auto 24px; }
+}
+
+/* ===== Topbar ===== */
 .topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
-  margin-bottom: 26px;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width: 0;
-}
-.dot{
-  width:10px;height:10px;border-radius:999px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
-  box-shadow: 0 0 0 6px rgba(140,70,255,.10);
-}
-.brandTitle{
-  font-weight:700;
-  letter-spacing:.2px;
-}
-.brandSub{
-  color: var(--muted);
-  margin-left: 6px;
-  font-size: 12px;
-}
-
-.actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex: 0 0 auto;
+  gap: 12px;
 }
 
 .pill{
   display:inline-flex;
   align-items:center;
-  justify-content:center;
-  gap:8px;
-  height: 34px;
-  padding: 0 12px;
+  gap:10px;
+  padding: 10px 12px;
   border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 10px 30px rgba(0,0,0,.18);
-  cursor:pointer;
-  user-select:none;
-  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
 }
-.pill:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
-.pill:active{ transform: translateY(0px) scale(.99); }
+.dot{
+  width:10px;height:10px;border-radius:999px;
+  background: radial-gradient(circle at 30% 30%, #9a7cff, #5d33ff);
+  box-shadow: 0 0 0 4px rgba(93,51,255,0.15);
+}
+.pillText{ font-weight: 700; letter-spacing: 0.2px; }
+.pillSub{ color: var(--muted2); font-size: 12px; }
 
-.hero{
-  margin: 26px 0 18px;
-}
-.h1{
-  font-size: 44px;
-  line-height: 1.06;
-  letter-spacing: -0.8px;
-  margin: 0 0 10px;
-  font-weight: 800;
-}
-.lead{
-  margin:0 0 18px;
-  color: var(--muted);
-  max-width: 620px;
-}
-
-.searchRow{
+.actions{
   display:flex;
   align-items:center;
-  gap:12px;
-  margin-top: 14px;
-}
-.search{
-  flex:1;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.18);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: 0 16px;
-  outline:none;
-}
-.search::placeholder{ color: rgba(255,255,255,.38); }
-.search:focus{
-  border-color: rgba(140,70,255,.35);
-  box-shadow: 0 0 0 6px rgba(140,70,255,.12);
-}
-
-/* Cards */
-.cards{
-  display:grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.card{
-  border-radius: var(--r24);
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border: 1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--shadow);
-  padding: 14px;
-  min-height: 460px;
-  display:flex;
-  flex-direction:column;
-}
-
-.cardHead{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
   gap:10px;
-  padding: 6px 6px 10px;
 }
-.cardTitle{
-  font-weight: 800;
-  font-size: 16px;
-  margin:0;
-}
-.cardDesc{
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--muted);
-}
-.count{
-  flex:0 0 auto;
-  height: 26px;
-  padding: 0 10px;
+
+/* 关键：语言按钮宽度固定，避免切换抖动 */
+.lang{
+  width: 46px;
+  height: 34px;
   border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  font-weight:700;
+}
+
+.btn{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  color: rgba(255,255,255,.75);
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.09);
+  color: var(--text);
+  text-decoration:none;
+  cursor:pointer;
+  font-weight: 600;
+}
+.btn:hover{ background: rgba(255,255,255,0.12); }
+
+.btnGhost{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.20);
+  color: var(--text);
+  text-decoration:none;
+  cursor:pointer;
+  font-weight: 600;
+}
+.btnGhost:hover{ background: rgba(0,0,0,0.28); }
+
+/* ===== Hero ===== */
+.hero{
+  padding: 18px 4px 14px;
+}
+
+/* 关键：标题区域固定高度，避免语言切换抖动 */
+.hero h1{
+  margin: 0;
+  font-size: 44px;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+  min-height: 52px;
+}
+.hero p{
+  margin: 10px 0 16px;
+  color: var(--muted);
+  min-height: 22px;
+}
+
+.searchWrap{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+.search{
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
+  color: var(--text);
+  padding: 0 16px;
+  outline: none;
+}
+.search::placeholder{ color: rgba(255,255,255,0.35); }
+.status{
+  min-width: 140px;
+  text-align:right;
+  color: var(--muted2);
+  font-size: 13px;
+}
+
+/* ===== Grid ===== */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  justify-content:center;
+  align-items:start;
+  padding-top: 10px;
+}
+
+@media (max-width: 980px){
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* ===== Card ===== */
+.card{
+  max-width: 360px;
+  width: 100%;
+  justify-self:center;
+  border-radius: var(--r);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.35);
+  overflow:hidden;
+  position: relative;
+}
+
+.cardTop{
+  padding: 14px 14px 10px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 10px;
+}
+.cardTitle{
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0;
+}
+.cardSub{
+  color: var(--muted2);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.badge{
+  min-width: 34px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.20);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color: var(--muted);
   font-size: 12px;
 }
 
+/* group pill */
 .groupRow{
   display:flex;
-  align-items:center;
-  gap:10px;
-  padding: 0 6px 12px;
+  gap: 8px;
+  padding: 0 14px 12px;
 }
 .groupPill{
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(140,70,255,.10);
-  border: 1px solid rgba(140,70,255,.25);
-  color: rgba(255,255,255,.85);
+  border: 1px solid rgba(160,120,255,0.25);
+  background: rgba(120,90,255,0.12);
+  color: rgba(230,220,255,0.95);
+  font-size: 12px;
   display:inline-flex;
   align-items:center;
-  gap:8px;
-  font-size:12px;
 }
 
-/* ==========================================================
-   ✅ 关键修复：卡片内部滚动 + 图片不重叠 + 滚轮只滚展示框
-   ========================================================== */
+/* ===== IMPORTANT: internal scroll area ===== */
+.cardBody{
+  padding: 12px 12px 14px;
+  max-height: 320px;     /* 卡片内滚动 */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
 
-/* 头像/图片的展示框（卡片内部的滚动容器） */
-.grid{
+/* 隐藏滚动条但保持可滚动（美学） */
+.cardBody{
+  scrollbar-width: none;            /* Firefox */
+}
+.cardBody::-webkit-scrollbar{       /* Chrome/Safari */
+  width: 0;
+  height: 0;
+}
+
+.thumbGrid{
   display:grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-
-  height: 360px;              /* 固定展示窗高度：滚轮只滚这里 */
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  overscroll-behavior: contain; /* 防止把页面一起带动 */
-  align-content: start;         /* 从顶部开始排，避免压扁叠层 */
-  padding: 8px 6px 8px 6px;
-  padding-right: 4px;
-
-  scrollbar-width: none;        /* Firefox 隐藏滚动条 */
 }
-.grid::-webkit-scrollbar{ width:0; height:0; } /* Webkit 隐藏滚动条 */
 
-/* 每个图片格子：固定高度，绝不重叠 */
-.tile{
-  border-radius: 18px;
-  background: rgba(0,0,0,.25);
-  border: 1px solid rgba(255,255,255,.08);
-  overflow:hidden;
-  cursor:pointer;
-  position:relative;
-  transition: transform .15s ease, border-color .15s ease, background .15s ease;
-
-  height: 110px;              /* ✅ 关键：固定格子高度 */
+/* 图片容器：绝对不允许重叠 */
+.thumb{
+  position: relative;
   display:block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r2);
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
+  cursor:pointer;
+  transform: none !important;
 }
-.tile:hover{
-  transform: translateY(-1px);
-  background: rgba(0,0,0,.30);
-  border-color: rgba(255,255,255,.14);
-}
-.tile:active{ transform: translateY(0px) scale(.99); }
-
-/* 图片填满格子，裁切但不变形 */
-.tile img{
+.thumb img{
   width:100%;
   height:100%;
   object-fit: cover;
   display:block;
+  transform: none !important;
+}
+.thumb:hover{
+  border-color: rgba(255,255,255,0.18);
 }
 
-/* 空态 */
 .empty{
-  margin: 8px 6px 0;
-  border-radius: var(--r16);
-  border: 1px dashed rgba(255,255,255,.14);
-  color: rgba(255,255,255,.45);
-  background: rgba(0,0,0,.16);
-  height: 360px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding: 16px;
+  padding: 12px;
+  border: 1px dashed rgba(255,255,255,0.18);
+  border-radius: 16px;
+  color: var(--muted2);
+  background: rgba(0,0,0,0.18);
 }
 
-/* Modal (preview) */
+/* ===== Modal ===== */
 .modal{
-  position:fixed;
-  inset:0;
+  position: fixed;
+  inset: 0;
   display:none;
-  align-items:center;
-  justify-content:center;
-  padding: 24px;
   z-index: 50;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
-.modal.show{ display:flex; }
+.modal[aria-hidden="false"]{ display:block; }
+
+.modalOverlay{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
 .modalCard{
-  width: min(980px, 100%);
-  border-radius: 22px;
-  background: rgba(15,16,22,.85);
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 30px 90px rgba(0,0,0,.6);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, calc(100% - 28px));
+  border-radius: 26px;
+  background: rgba(18,20,28,0.78);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.65);
   overflow:hidden;
 }
+
 .modalTop{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
 }
-.modalTitle{
-  min-width:0;
-  color: rgba(255,255,255,.8);
+.modalName{
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.modalPath{
+  margin-top: 4px;
+  color: var(--muted2);
   font-size: 12px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  word-break: break-all;
 }
-.modalBtns{ display:flex; gap:8px; }
-.btn{
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.10);
-  cursor:pointer;
-  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+.modalBtns{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex-wrap: wrap;
 }
-.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
-.btn:active{ transform: translateY(0px) scale(.99); }
-
 .modalBody{
   padding: 14px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background: rgba(0,0,0,.18);
+  display:grid;
+  place-items:center;
+  background: rgba(0,0,0,0.18);
 }
 .modalBody img{
   max-width: 100%;
   max-height: 72vh;
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 18px 60px rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.25);
 }
 
-/* Toast */
+/* ===== Toast ===== */
 .toast{
   position: fixed;
   left: 50%;
@@ -348,78 +382,16 @@ button,input{ font:inherit; color:inherit; }
   transform: translateX(-50%);
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(0,0,0,.55);
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  color: rgba(255,255,255,.88);
-  box-shadow: 0 18px 60px rgba(0,0,0,.5);
-  display:none;
-  z-index: 60;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.55);
+  color: var(--text);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events:none;
+  transition: opacity .18s ease, transform .18s ease;
+  font-weight: 600;
 }
-.toast.show{ display:block; }
-
-/* Responsive */
-@media (max-width: 980px){
-  .cards{ grid-template-columns: 1fr; }
-  .card{ min-height: 420px; }
-  .grid{ height: 340px; }
-  .empty{ height: 340px; }
-  .h1{ font-size: 36px; }
-}
-/* ===== FIX: stop overlap (force real grid & disable masonry) ===== */
-
-/* 兜底：卡片里的“图片容器”不管你用啥类名，都强制成 grid */
-.card .grid,
-.card .masonry,
-.card .gallery,
-.card .items,
-.card .thumbs,
-.card [data-grid="1"]{
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-
-  height: 360px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  overscroll-behavior: contain !important;
-
-  column-count: unset !important;     /* 禁用 columns 瀑布流 */
-  column-gap: unset !important;
-  position: relative !important;
-}
-
-/* 兜底：容器的“每一个子元素”都变成固定高度卡片，清掉绝对定位/位移 */
-.card .grid > *,
-.card .masonry > *,
-.card .gallery > *,
-.card .items > *,
-.card .thumbs > *,
-.card [data-grid="1"] > *{
-  height: 110px !important;
-  border-radius: 18px !important;
-  overflow: hidden !important;
-
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-
-  transform: none !important;         /* 禁用 translate 布局导致的重叠 */
-  translate: none !important;
-}
-
-/* 兜底：里面的图片永远铺满且不变形 */
-.card .grid img,
-.card .masonry img,
-.card .gallery img,
-.card .items img,
-.card .thumbs img,
-.card [data-grid="1"] img{
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block !important;
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
 }
