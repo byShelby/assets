@@ -94,17 +94,24 @@ body {
 }
 .chip:hover { background: rgba(255,255,255,0.08); }
 
+/* ✅ 关键修正：不要垂直居中（会把卡片压到下面） */
 .stage {
   position: fixed;
   inset: 0;
+
+  /* 原来：display:grid; place-items:center; */
   display: grid;
-  place-items: center;
-  padding: 88px 24px 36px;
+  justify-items: center;     /* 水平居中 */
+  align-content: start;      /* 从顶部开始排 */
+  padding: 88px 24px 36px;   /* 顶部预留给 topbar */
+  row-gap: 14px;             /* hero 与 cards 间距更紧凑 */
 }
+
 .hero {
   width: min(980px, 96vw);
-  margin-bottom: 8px;
+  margin-bottom: 0; /* ✅ 交给 row-gap 控制间距 */
 }
+
 h1 {
   margin: 0 0 6px 0;
   font-size: 44px;
@@ -161,7 +168,7 @@ h1 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 
-  /* ✅ 核心：不要把卡片强行拉成一样高，避免“玻璃框太长” */
+  /* ✅ 不要把卡片强行拉成一样高，避免“玻璃框太长” */
   align-items: start;
 }
 
