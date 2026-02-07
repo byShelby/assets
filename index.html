@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>assets</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Assets</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -11,44 +11,52 @@
     <div class="brand">
       <span class="dot"></span>
       <span class="name">assets</span>
-      <span class="badge">GitHub Pages</span>
+      <span class="tag">GitHub Pages</span>
     </div>
 
     <div class="actions">
-      <button id="langBtn" class="pill" type="button">ZH</button>
-      <a id="repoBtn" class="pill" href="#" target="_blank" rel="noreferrer">Open Repo</a>
+      <button class="pill" id="langBtn" type="button" title="Language">EN</button>
+      <a class="pill" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
     </div>
   </header>
 
-  <main class="main">
-    <h1 id="title" class="h1">你的资源库</h1>
-    <input id="search" class="search" placeholder="搜索…" />
+  <main class="wrap">
+    <section class="hero">
+      <h1 id="title">你的资源库</h1>
+      <p id="subtitle" class="muted">干净、可复制直链、可预览。</p>
 
-    <section id="error" class="error" aria-live="polite">
-      <div class="errorCard">
-        <div id="errorTitle" class="errorTitle">资源索引加载失败</div>
-        <button id="retryBtn" class="btn" type="button">重试</button>
+      <div class="searchRow">
+        <input id="q" type="search" placeholder="Search: avatar / icon / photo" autocomplete="off" />
+        <span id="status" class="status"></span>
       </div>
     </section>
 
-    <section id="panels" class="panels"></section>
+    <section id="grid" class="grid"></section>
   </main>
 
   <!-- Modal -->
   <div id="modal" class="modal" aria-hidden="true">
-    <div id="modalBackdrop" class="backdrop"></div>
-    <div class="modalCard">
-      <button id="modalClose" class="x" type="button" aria-label="Close">×</button>
-      <img id="modalImg" class="modalImg" alt="" />
-      <div class="modalBar">
-        <input id="modalLink" class="modalLink" readonly />
-        <button id="copyBtn" class="btn" type="button">Copy</button>
-        <button id="openBtn" class="btn ghost" type="button">Open</button>
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalCard" role="dialog" aria-modal="true">
+      <div class="modalTop">
+        <div class="modalMeta">
+          <div id="modalName" class="modalName"></div>
+          <div id="modalPath" class="modalPath"></div>
+        </div>
+        <button class="iconBtn" id="modalClose" type="button" title="Close">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <img id="modalImg" alt="" />
+      </div>
+
+      <div class="modalBottom">
+        <button class="btn" id="copyPages" type="button">Copy Pages Link</button>
+        <button class="btn" id="copyRaw" type="button">Copy Raw Link</button>
+        <a class="btn ghost" id="openNew" href="#" target="_blank" rel="noreferrer">Open</a>
       </div>
     </div>
   </div>
-
-  <div id="toast" class="toast"></div>
 
   <script src="./app.js"></script>
 </body>
