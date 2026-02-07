@@ -1,113 +1,103 @@
 (() => {
-  // ---------- Config ----------
-  // GitHub Pages project path: /assets/
-  // We compute base from current path to avoid hardcoding username.
-  const BASE_PATH = (() => {
-    // if hosted at https://byshelby.github.io/assets/...
-    // pathname begins with /assets/...
-    const p = window.location.pathname;
-    // keep "/assets/" as base if present, otherwise "/"
-    const idx = p.indexOf("/assets/");
-    if (idx >= 0) return "/assets/";
-    // fallback
-    return "/";
-  })();
+  const MANIFEST_PATH = "./data/manifest.json";
 
-  const MANIFEST_URL = `${BASE_PATH}data/manifest.json`;
+  const elCards = document.getElementById("cards");
+  const elStatus = document.getElementById("status");
+  const elSearch = document.getElementById("search");
+  const elToast = document.getElementById("toast");
 
-  const i18n = {
+  const elLangBtn = document.getElementById("langBtn");
+  const elRepoBtn = document.getElementById("repoBtn");
+  const elTitle = document.getElementById("title");
+  const elSubtitle = document.getElementById("subtitle");
+
+  const modal = document.getElementById("modal");
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const modalClose = document.getElementById("modalClose");
+  const modalImg = document.getElementById("modalImg");
+  const modalName = document.getElementById("modalName");
+  const modalPath = document.getElementById("modalPath");
+  const copyBtn = document.getElementById("copyBtn");
+  const openBtn = document.getElementById("openBtn");
+  const doneBtn = document.getElementById("doneBtn");
+
+  let manifest = null;
+  let lang = localStorage.getItem("assets_lang") || "en";
+  let currentItem = null;
+  let toastTimer = null;
+
+  const I18N = {
     en: {
       title: "Asset Library",
       subtitle: "Search, preview, and copy direct links.",
-      searchPh: "Search: category / group / filename",
-      ready: "Ready",
+      searchPH: "Search: category / group / filename",
       loading: "Loading…",
-      loadFail: "Load failed",
-      emptyGroup: "No files in this group.",
+      ready: "Ready",
+      loadFailed: "Load failed",
       copy: "Copy link",
       open: "Open",
       done: "Done",
       copied: "Link copied",
       copyFail: "Copy failed",
-      avatars: "Avatars",
-      icons: "Icons",
-      photos: "Photos",
+      empty: "No files in this group."
     },
     zh: {
       title: "资源库",
       subtitle: "搜索、预览并复制直链。",
-      searchPh: "搜索：分类 / 分组 / 文件名",
-      ready: "就绪",
+      searchPH: "搜索：分类 / 分组 / 文件名",
       loading: "加载中…",
-      loadFail: "加载失败",
-      emptyGroup: "该分组暂无文件。",
+      ready: "就绪",
+      loadFailed: "加载失败",
       copy: "复制链接",
       open: "打开",
       done: "完成",
-      copied: "已复制链接",
+      copied: "链接已复制",
       copyFail: "复制失败",
-      avatars: "头像",
-      icons: "图标",
-      photos: "图片",
-    },
+      empty: "此分组暂无文件。"
+    }
   };
 
-  // ---------- DOM ----------
-  const el = {
-    title: document.getElementById("title"),
-    subtitle: document.getElementById("subtitle"),
-    search: document.getElementById("searchInput"),
-    cards: document.getElementById("cards"),
-    status: document.getElementById("statusPill"),
-    langBtn: document.getElementById("langBtn"),
-    repoBtn: document.getElementById("repoBtn"),
-    toast: document.getElementById("toast"),
-
-    modal: document.getElementById("modal"),
-    modalBackdrop: document.getElementById("modalBackdrop"),
-    modalClose: document.getElementById("modalClose"),
-    modalImg: document.getElementById("modalImg"),
-    modalName: document.getElementById("modalName"),
-    modalPath: document.getElementById("modalPath"),
-    copyBtn: document.getElementById("copyBtn"),
-    openBtn: document.getElementById("openBtn"),
-    doneBtn: document.getElementById("doneBtn"),
-  };
-
-  // ---------- State ----------
-  let lang = localStorage.getItem("asset_lang") || "en";
-  if (!i18n[lang]) lang = "en";
-
-  let manifest = null;
-  let flatItems = []; // for search
-  let currentItem = null;
-
-  // ---------- Helpers ----------
-  const t = (k) => i18n[lang][k] || i18n.en[k] || k;
-
-  function setStatus(text, mode = "ok") {
-    el.status.textContent = text;
-    el.status.style.opacity = "1";
-    if (mode === "fail") el.status.style.color = "rgba(255,255,255,0.75)";
-    else el.status.style.color = "rgba(255,255,255,0.75)";
+  function t(key) {
+    return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
   }
 
-  function toast(msg) {
-    el.toast.textContent = msg;
-    el.toast.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => el.toast.classList.remove("show"), 1200);
+  function setLang(next) {
+    lang = next;
+    localStorage.setItem("assets_lang", lang);
+    elLangBtn.textContent = lang === "zh" ? "中文" : "EN";
+    elTitle.textContent = t("title");
+    elSubtitle.textContent = t("subtitle");
+    elSearch.placeholder = t("searchPH");
+    copyBtn.textContent = t("copy");
+    openBtn.textContent = t("open");
+    doneBtn.textContent = t("done");
+    render(); // 文案刷新，不改布局
   }
 
-  function toDirectUrl(relPath) {
-    // direct URL on pages: https://byshelby.github.io/assets/<relPath>
-    // manifest stores paths like "avatars/avatar-1.jpg"
-    return `${window.location.origin}${BASE_PATH}${relPath}`.replace(/([^:]\/)\/+/g, "$1");
+  function baseUrl() {
+    // GitHub Pages: https://xxx.github.io/assets/  -> 保证以 /assets/ 结尾
+    let p = location.pathname;
+    if (!p.endsWith("/")) p = p.replace(/\/[^/]*$/, "/");
+    return location.origin + p;
+  }
+
+  function absUrl(path) {
+    // manifest 里是 "avatars/avatar-1.jpg" 这种
+    return baseUrl() + path.replace(/^\/+/, "");
+  }
+
+  function toast(msg, ok = true) {
+    elToast.textContent = msg;
+    elToast.classList.add("show");
+    elToast.setAttribute("data-ok", ok ? "1" : "0");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => elToast.classList.remove("show"), 1200);
   }
 
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
+      toast(t("copied"), true);
       return true;
     } catch (e) {
       // fallback
@@ -116,244 +106,238 @@
         ta.value = text;
         ta.style.position = "fixed";
         ta.style.left = "-9999px";
+        ta.style.top = "-9999px";
         document.body.appendChild(ta);
+        ta.focus();
         ta.select();
         const ok = document.execCommand("copy");
         document.body.removeChild(ta);
-        return ok;
-      } catch (e2) {
-        return false;
-      }
+        if (ok) {
+          toast(t("copied"), true);
+          return true;
+        }
+      } catch (_) {}
+      toast(t("copyFail"), false);
+      return false;
     }
   }
 
-  function normalize(str) {
-    return (str || "")
-      .toLowerCase()
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  // ---------- Render ----------
-  function buildFlatItems(m) {
-    const items = [];
-    const cats = m?.categories || {};
-    Object.keys(cats).forEach((catKey) => {
-      const cat = cats[catKey];
-      const groups = cat?.groups || {};
-      Object.keys(groups).forEach((groupKey) => {
-        const arr = groups[groupKey] || [];
-        arr.forEach((path) => {
-          const name = path.split("/").pop();
-          items.push({
-            category: catKey,
-            group: groupKey,
-            path,
-            name,
-            url: toDirectUrl(path),
-          });
-        });
-      });
-    });
-    return items;
-  }
-
-  function render() {
-    el.title.textContent = t("title");
-    el.subtitle.textContent = t("subtitle");
-    el.search.placeholder = t("searchPh");
-    el.status.textContent = t("ready");
-
-    // repo link
-    el.repoBtn.href = `https://github.com${BASE_PATH.replace(/\/$/,"")}`.includes("/assets")
-      ? "https://github.com/byShelby/assets"
-      : "https://github.com/byShelby/assets";
-
-    // language button fixed width already in CSS
-    el.langBtn.textContent = lang === "en" ? "EN" : "中文";
-
-    // cards
-    if (!manifest) {
-      el.cards.innerHTML = "";
-      return;
-    }
-
-    const q = normalize(el.search.value);
-
-    const categories = manifest.categories || {};
-    const catOrder = ["avatars", "icons", "photos"];
-    const ordered = [...catOrder, ...Object.keys(categories).filter(k => !catOrder.includes(k))];
-
-    el.cards.innerHTML = ordered
-      .filter((k) => categories[k])
-      .map((catKey) => renderCategory(catKey, categories[catKey], q))
-      .join("");
-  }
-
-  function renderCategory(catKey, cat, q) {
-    const titleKey = catKey === "avatars" ? "avatars" : catKey === "icons" ? "icons" : catKey === "photos" ? "photos" : catKey;
-    const title = t(titleKey) || catKey;
-    const total = cat?.total ?? 0;
-
-    // pick first group (usually "root") for display like your current UI
-    const groups = cat?.groups || {};
-    const groupKeys = Object.keys(groups);
-    const groupKey = groupKeys.includes("root") ? "root" : groupKeys[0] || "root";
-    const list = groups[groupKey] || [];
-
-    // filter by search
-    const filtered = list.filter((p) => {
-      if (!q) return true;
-      const name = p.split("/").pop();
-      const target = normalize(`${catKey} ${groupKey} ${name}`);
-      return target.includes(q);
-    });
-
-    const body = filtered.length
-      ? `<div class="grid">
-          ${filtered
-            .map((p) => {
-              const name = p.split("/").pop();
-              const url = toDirectUrl(p);
-              return `
-                <button class="thumb" type="button"
-                  data-path="${escapeHtml(p)}"
-                  data-name="${escapeHtml(name)}"
-                  data-cat="${escapeHtml(catKey)}"
-                  data-group="${escapeHtml(groupKey)}"
-                  data-url="${escapeHtml(url)}"
-                  title="${escapeHtml(p)}"
-                >
-                  <img loading="lazy" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" />
-                </button>`;
-            })
-            .join("")}
-        </div>`
-      : `<div class="emptyBox">${t("emptyGroup")}</div>`;
-
-    return `
-      <article class="card" data-cat="${escapeHtml(catKey)}">
-        <div class="cardHead">
-          <div>
-            <div class="cardTitle">${escapeHtml(title)}</div>
-            <div class="cardMeta">${escapeHtml(groupKey)}</div>
-          </div>
-          <div class="badge">${escapeHtml(String(total))}</div>
-        </div>
-
-        <div class="groupChip">${escapeHtml(groupKey)}</div>
-
-        <div class="cardBody">
-          ${body}
-        </div>
-      </article>
-    `;
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  // ---------- Modal ----------
   function openModal(item) {
     currentItem = item;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
 
-    el.modal.classList.add("show");
-    el.modal.setAttribute("aria-hidden", "false");
-
-    el.modalName.textContent = item.name;
-    el.modalPath.textContent = item.path;
-
-    el.modalImg.src = item.url;
-    el.modalImg.alt = item.name;
-
-    el.openBtn.href = item.url;
-
-    el.copyBtn.textContent = t("copy");
-    el.openBtn.textContent = t("open");
-    el.doneBtn.textContent = t("done");
+    const url = absUrl(item.path);
+    modalImg.src = url;
+    modalName.textContent = item.name;
+    modalPath.textContent = item.path;
+    openBtn.href = url;
   }
 
   function closeModal() {
-    el.modal.classList.remove("show");
-    el.modal.setAttribute("aria-hidden", "true");
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
     currentItem = null;
   }
 
-  // ---------- Load ----------
-  async function loadManifest() {
-    setStatus(t("loading"));
-    try {
-      const res = await fetch(`${MANIFEST_URL}?v=${Date.now()}`, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      manifest = await res.json();
-      flatItems = buildFlatItems(manifest);
-      setStatus(t("ready"));
-      render();
-    } catch (e) {
-      console.error(e);
-      setStatus(t("loadFail"), "fail");
-      el.cards.innerHTML = "";
-      toast(`${t("loadFail")}`);
+  function normalizeQuery(q) {
+    return String(q || "").trim().toLowerCase();
+  }
+
+  function buildItems() {
+    const out = [];
+    if (!manifest?.categories) return out;
+
+    for (const [catName, cat] of Object.entries(manifest.categories)) {
+      const groups = cat.groups || {};
+      for (const [groupName, arr] of Object.entries(groups)) {
+        const files = Array.isArray(arr) ? arr : [];
+        for (const p of files) {
+          const name = String(p).split("/").pop();
+          out.push({
+            category: catName,
+            group: groupName,
+            path: p,
+            name,
+            url: absUrl(p)
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  function groupByCategory(items) {
+    const map = new Map();
+    for (const it of items) {
+      if (!map.has(it.category)) map.set(it.category, new Map());
+      const gmap = map.get(it.category);
+      if (!gmap.has(it.group)) gmap.set(it.group, []);
+      gmap.get(it.group).push(it);
+    }
+    // stable order for UI
+    return map;
+  }
+
+  function cardTitle(cat) {
+    if (lang === "zh") {
+      if (cat === "avatars") return "头像";
+      if (cat === "icons") return "图标";
+      if (cat === "photos") return "图片";
+    }
+    // EN
+    if (cat === "avatars") return "Avatars";
+    if (cat === "icons") return "Icons";
+    if (cat === "photos") return "Photos";
+    return cat;
+  }
+
+  function createCard(cat, total, groupName, items) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const head = document.createElement("div");
+    head.className = "cardHead";
+
+    const left = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "cardTitle";
+    title.textContent = cardTitle(cat);
+
+    const meta = document.createElement("div");
+    meta.className = "cardMeta";
+    meta.textContent = groupName;
+
+    left.appendChild(title);
+    left.appendChild(meta);
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = String(total || 0);
+
+    head.appendChild(left);
+    head.appendChild(badge);
+
+    const groupChip = document.createElement("div");
+    groupChip.className = "groupChip";
+    groupChip.textContent = groupName;
+
+    const body = document.createElement("div");
+    body.className = "cardBody";
+
+    if (!items || items.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "emptyBox";
+      empty.textContent = t("empty");
+      body.appendChild(empty);
+    } else {
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      for (const it of items) {
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+        thumb.title = it.path;
+
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.src = it.url;
+        img.alt = it.name;
+
+        thumb.appendChild(img);
+        thumb.addEventListener("click", () => openModal(it));
+        grid.appendChild(thumb);
+      }
+
+      body.appendChild(grid);
+    }
+
+    card.appendChild(head);
+    card.appendChild(groupChip);
+    card.appendChild(body);
+    return card;
+  }
+
+  function pickMainGroup(groupsMap) {
+    // 优先 root，否则取第一个 group
+    if (groupsMap.has("root")) return "root";
+    const it = groupsMap.keys().next();
+    return it.done ? "root" : it.value;
+  }
+
+  function render() {
+    elCards.innerHTML = "";
+
+    if (!manifest) return;
+
+    const allItems = buildItems();
+    const q = normalizeQuery(elSearch.value);
+
+    const filtered = q
+      ? allItems.filter((x) => {
+          const hay = `${x.category}/${x.group}/${x.name}`.toLowerCase();
+          return hay.includes(q);
+        })
+      : allItems;
+
+    const byCat = groupByCategory(filtered);
+
+    const categories = ["avatars", "icons", "photos"];
+    for (const cat of categories) {
+      const catObj = manifest.categories?.[cat] || { total: 0, groups: {} };
+      const gmap = byCat.get(cat) || new Map();
+
+      const mainGroup = pickMainGroup(gmap.size ? gmap : new Map(Object.entries(catObj.groups || {})));
+      const list = gmap.get(mainGroup) || [];
+      const total = catObj.total || 0;
+
+      elCards.appendChild(createCard(cat, total, mainGroup, list));
     }
   }
 
-  // ---------- Events ----------
-  el.langBtn.addEventListener("click", () => {
-    lang = lang === "en" ? "zh" : "en";
-    localStorage.setItem("asset_lang", lang);
-    render();
+  async function loadManifest() {
+    try {
+      elStatus.textContent = t("loading");
+
+      // Repo link: 当前仓库 GitHub 页面（可用则显示）
+      // 如果你在 Pages 里用的是 /assets/，这个 repo 链接不影响功能
+      elRepoBtn.href = "https://github.com/" + (location.hostname.split(".github.io")[0] || "byShelby") + "/assets";
+
+      const res = await fetch(MANIFEST_PATH, { cache: "no-store" });
+      if (!res.ok) throw new Error("manifest http " + res.status);
+      manifest = await res.json();
+
+      elStatus.textContent = t("ready");
+      render();
+    } catch (e) {
+      console.error(e);
+      elStatus.textContent = t("loadFailed");
+      // 页面还能显示基本框架，不会烂
+      manifest = manifest || { categories: { avatars: { total: 0, groups: {} }, icons: { total: 0, groups: {} }, photos: { total: 0, groups: {} } } };
+      render();
+    }
+  }
+
+  // events
+  elSearch.addEventListener("input", () => render());
+
+  elLangBtn.addEventListener("click", () => {
+    setLang(lang === "en" ? "zh" : "en");
   });
 
-  el.search.addEventListener("input", () => render());
-
-  el.cards.addEventListener("click", (ev) => {
-    const btn = ev.target.closest(".thumb");
-    if (!btn) return;
-    const item = {
-      path: btn.dataset.path,
-      name: btn.dataset.name,
-      category: btn.dataset.cat,
-      group: btn.dataset.group,
-      url: btn.dataset.url,
-    };
-    openModal(item);
+  modalBackdrop.addEventListener("click", closeModal);
+  modalClose.addEventListener("click", closeModal);
+  doneBtn.addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
   });
 
-  el.modalBackdrop.addEventListener("click", closeModal);
-  el.modalClose.addEventListener("click", closeModal);
-  el.doneBtn.addEventListener("click", closeModal);
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && el.modal.classList.contains("show")) closeModal();
-  });
-
-  el.copyBtn.addEventListener("click", async () => {
+  copyBtn.addEventListener("click", async () => {
     if (!currentItem) return;
-    const ok = await copyText(currentItem.url);
-    if (ok) toast(t("copied"));
-    else toast(t("copyFail"));
+    await copyText(absUrl(currentItem.path));
   });
 
-  // prevent page scroll by wheel when mouse is on stage background
-  // (cards scroll themselves)
-  window.addEventListener(
-    "wheel",
-    (e) => {
-      const inCardBody = e.target.closest(".cardBody");
-      if (inCardBody) return; // allow card internal scroll
-      // otherwise block page scroll
-      e.preventDefault();
-    },
-    { passive: false }
-  );
-
-  // ---------- Init ----------
-  render();
+  // init
+  setLang(lang);
   loadManifest();
 })();
