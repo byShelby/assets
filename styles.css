@@ -97,11 +97,18 @@ body {
 .stage {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
 
-  /* ✅ 关键：整体往上“微抬”一点（不改布局逻辑、不让页面滚动） */
+  /* ✅ 关键：用 flex 列布局，避免 grid 把 hero/cards 拉开 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* ✅ 控制整体在视觉中心，不让卡片跑太下面 */
   padding: 64px 24px 36px;
+
+  /* ✅ hero 和 cards 的间距，用 gap 控制，不会莫名其妙变大 */
+  gap: 14px;
 }
 
 /* ✅ 关键：标题区居中、并让标题/副标题更像“大标题风格” */
