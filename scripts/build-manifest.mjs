@@ -1,45 +1,76 @@
-const fs = require("fs");
-const path = require("path");
+// scripts/build-manifest.mjs
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 const ROOT = process.cwd();
-const OUT_DIR = path.join(ROOT, "data");
-const OUT_FILE = path.join(OUT_DIR, "manifest.json");
+const OUT_FILE = path.join(ROOT, "data", "manifest.json");
 
+// 你页面固定用这三个类别（app.js 里 categories = ["avatars","icons","photos"]）
 const CATEGORIES = ["avatars", "icons", "photos"];
-const IMAGE_EXT = new Set([".png",".jpg",".jpeg",".webp",".gif",".svg",".ico"]);
 
-function listFiles(dir){
-  const out = [];
-  if(!fs.existsSync(dir)) return out;
-  for (const name of fs.readdirSync(dir)){
-    if(name.startsWith(".")) continue;
-    const p = path.join(dir, name);
-    const st = fs.statSync(p);
-    if(st.isDirectory()) continue; // ✅ 你要“不要子文件夹”，所以直接忽略目录
-    const ext = path.extname(name).toLowerCase();
-    if(IMAGE_EXT.has(ext)) out.push(name);
-  }
-  return out.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true, sensitivity:"base"}));
+// ✅ 关键：把 .jpeg 也算进去（并且大小写都支持）
+const ALLOW_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]);
+
+function isAllowedFile(name) {
+  const base = path.basename(name);
+  if (base.startsWith(".")) return false; // .DS_Store / .gitkeep ...
+  const ext = path.extname(base).toLowerCase();
+  return ALLOW_EXT.has(ext);
 }
 
-function build(){
+async function listFiles(dirAbs, dirRel) {
+  // 只扫描一层：avatars/*  icons/*  photos/*
+  // 如果你未来想支持子目录（photos/wallpapers/...），我也可以给你递归版
+  const out = [];
+  let entries = [];
+  try {
+    entries = await fs.readdir(dirAbs, { withFileTypes: true });
+  } catch {
+    return out; // 目录不存在就当空
+  }
+
+  for (const ent of entries) {
+    if (!ent.isFile()) continue;
+    if (!isAllowedFile(ent.name)) continue;
+
+    // 输出相对路径，和你现有 manifest 风格一致： "photos/xxx.jpeg"
+    out.push(path.posix.join(dirRel, ent.name));
+  }
+
+  // 稳定排序（不然每次生成顺序都可能变）
+  out.sort((a, b) => a.localeCompare(b, "en"));
+  return out;
+}
+
+async function main() {
   const categories = {};
-  for (const cat of CATEGORIES){
-    const dir = path.join(ROOT, cat);
-    const files = listFiles(dir);
+
+  for (const cat of CATEGORIES) {
+    const dirAbs = path.join(ROOT, cat);
+    const files = await listFiles(dirAbs, cat);
+
     categories[cat] = {
       total: files.length,
-      groups: {
-        root: files.map(f => `${cat}/${f}`)
-      }
+      groups: files.length ? { root: files } : {}
     };
   }
-  return {
+
+  const manifest = {
     generatedAt: new Date().toISOString(),
     categories
   };
+
+  // 确保 data/ 存在
+  await fs.mkdir(path.dirname(OUT_FILE), { recursive: true });
+  await fs.writeFile(OUT_FILE, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+
+  console.log(`✅ manifest updated: ${path.relative(ROOT, OUT_FILE)}`);
+  console.log(
+    `avatars=${categories.avatars.total}, icons=${categories.icons.total}, photos=${categories.photos.total}`
+  );
 }
 
-fs.mkdirSync(OUT_DIR, { recursive: true });
-fs.writeFileSync(OUT_FILE, JSON.stringify(build(), null, 2), "utf8");
-console.log("Wrote", OUT_FILE);
+main().catch((err) => {
+  console.error("❌ build manifest failed:", err);
+  process.exit(1);
+});
