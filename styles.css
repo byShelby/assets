@@ -14,6 +14,7 @@
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
@@ -47,6 +48,7 @@ body {
   pointer-events: none;
   z-index: 10;
 }
+
 .pill {
   pointer-events: auto;
   display: inline-flex;
@@ -59,12 +61,14 @@ body {
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow2);
 }
+
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: rgba(124, 58, 237, 0.95);
 }
+
 .pill-title { font-weight: 600; letter-spacing: 0.2px; }
 .pill-sub { font-size: 12px; color: var(--muted); }
 
@@ -94,36 +98,31 @@ body {
 }
 .chip:hover { background: rgba(255,255,255,0.08); }
 
+/* Stage */
 .stage {
   position: fixed;
   inset: 0;
-
-  /* ✅ 关键：用 flex 列布局，避免 grid 把 hero/cards 拉开 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  /* ✅ 控制整体在视觉中心，不让卡片跑太下面 */
-  padding: 64px 24px 36px;
+  /* ✅ 视觉中心：整体略上移一点点（不会太多） */
+  padding: 54px 24px 36px;
 
-  /* ✅ hero 和 cards 的间距，用 gap 控制，不会莫名其妙变大 */
+  /* ✅ hero/cards 间距稳定 */
   gap: 14px;
 }
 
-/* ✅ 关键：标题区居中、并让标题/副标题更像“大标题风格” */
+/* Hero */
 .hero {
   width: min(980px, 96vw);
   text-align: center;
-
-  /* ✅ 标题区与卡片区距离更近一点（别离太远） */
-  margin-bottom: 12px;
+  margin-bottom: 10px; /* ✅ 不要离卡太远 */
 }
 
 h1 {
   margin: 0 0 8px 0;
-
-  /* ✅ 大标题风格（更“主视觉”） */
   font-size: 54px;
   font-weight: 760;
   letter-spacing: -0.9px;
@@ -133,32 +132,34 @@ h1 {
 .sub {
   margin: 0 0 16px 0;
   color: var(--muted);
-
-  /* ✅ 副标题也用更“标题体系”的质感 */
   font-size: 16px;
   font-weight: 560;
   letter-spacing: -0.2px;
 }
 
-/* Search */
+/* Search row (aligned with cards) */
 .searchRow {
+  width: min(980px, 96vw);         /* ✅ 与 cards 完全同宽 */
   display: flex;
   align-items: center;
-
-  /* ✅ 居中显示 */
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
+/* Search wrap */
 .searchWrap {
   flex: 1;
-  max-width: 760px; /* ✅ 搜索框不要无限长，居中更高级 */
   border-radius: 999px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow2);
-  padding: 6px;
+
+  /* ✅ 让整体高度“可控”，与 Ready 完全一致 */
+  padding: 6px;                   /* 6*2 + 14*2 + line-height ≈ 56px */
+  height: 56px;
+  display: flex;
+  align-items: center;
 }
 
 .search {
@@ -167,21 +168,32 @@ h1 {
   outline: none;
   background: transparent;
   color: var(--fg);
-  padding: 12px 14px;
-  font-size: 13px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1;
 }
 .search::placeholder { color: rgba(255,255,255,0.45); }
 
+/* Ready pill — EXACT match to searchWrap */
 .statusPill {
-  white-space: nowrap;
-  padding: 10px 14px;
+  height: 56px;
+  min-width: 112px;
+  padding: 0 22px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.06);
+
+  background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.10);
   color: rgba(255,255,255,0.75);
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1;
+
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow2);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 /* Cards layout */
@@ -191,10 +203,10 @@ h1 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 
-  /* ✅ 不强行等高，避免视觉“拉长” */
-  align-items: start;
+  /* ✅ 三个卡片框架同高对齐（只影响卡框，不影响页面） */
+  align-items: stretch;
 
-  /* ✅ 关键：卡片区离搜索框更近一点（你要的：不要靠下） */
+  /* ✅ 卡片区离搜索框更近 */
   margin-top: 6px;
 }
 
@@ -206,6 +218,10 @@ h1 {
   box-shadow: var(--shadow);
   backdrop-filter: blur(20px);
   overflow: hidden;
+
+  /* ✅ 保证内部结构稳定，frame 对齐 */
+  display: flex;
+  flex-direction: column;
 }
 
 .cardHead {
@@ -213,16 +229,14 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+
+  /* ✅ 统一卡头高度，避免顶部不齐 */
+  min-height: 76px;
 }
-.cardTitle {
-  font-weight: 650;
-  letter-spacing: 0.2px;
-}
-.cardMeta {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--muted);
-}
+
+.cardTitle { font-weight: 650; letter-spacing: 0.2px; }
+.cardMeta { margin-top: 2px; font-size: 12px; color: var(--muted); }
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -263,6 +277,9 @@ h1 {
   max-height: 320px;
   overflow-y: auto;
   overscroll-behavior: contain;
+
+  /* ✅ 让空内容也更“居中好看” */
+  flex: 1;
 }
 
 /* hide scrollbar (premium) */
@@ -286,6 +303,8 @@ h1 {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10);
   cursor: pointer;
+
+  transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
 }
 .thumb img {
   width: 100%;
@@ -294,14 +313,46 @@ h1 {
   display: block;
 }
 
-/* Empty state */
+.thumb:hover {
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+.thumb:active {
+  transform: translateY(0px) scale(0.99);
+  filter: brightness(0.98);
+}
+.thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
+
+/* Selected state (if JS adds .selected on click) */
+.thumb.selected {
+  border-color: rgba(124,58,237,0.55);
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.25), 0 18px 60px rgba(0,0,0,0.40);
+}
+.thumb.selected::after {
+  content: "Selected";
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,0.92);
+  background: rgba(124,58,237,0.28);
+  border: 1px solid rgba(124,58,237,0.35);
+  backdrop-filter: blur(12px);
+}
+
+/* Empty state (premium, no dashed) */
 .emptyBox {
   border-radius: 16px;
   padding: 14px;
   color: rgba(255,255,255,0.60);
   font-size: 13px;
-
-  /* ✅ 高级玻璃占位（无虚线） */
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.03);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
@@ -312,7 +363,7 @@ h1 {
   position: fixed;
   left: 50%;
   bottom: 26px;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(6px);
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(0,0,0,0.65);
@@ -323,10 +374,13 @@ h1 {
   backdrop-filter: blur(12px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 30;
 }
-.toast.show { opacity: 1; }
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0px);
+}
 
 /* Modal */
 .modal {
@@ -373,6 +427,7 @@ h1 {
   color: var(--muted);
   word-break: break-all;
 }
+
 .iconBtn {
   border: 0;
   cursor: pointer;
@@ -381,8 +436,15 @@ h1 {
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 12px;
   padding: 8px 10px;
+
+  transition: transform .12s ease, filter .18s ease, background .18s ease, border-color .18s ease;
 }
-.iconBtn:hover { background: rgba(255,255,255,0.08); }
+.iconBtn:hover { background: rgba(255,255,255,0.08); filter: brightness(1.06); }
+.iconBtn:active { transform: translateY(1px) scale(0.99); }
+.iconBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
 
 .modal-body {
   padding: 10px 14px 0;
@@ -403,6 +465,7 @@ h1 {
   gap: 10px;
   justify-content: flex-end;
 }
+
 .btn {
   border: 0;
   cursor: pointer;
@@ -413,137 +476,37 @@ h1 {
   color: rgba(255,255,255,0.92);
   text-decoration: none;
   font-size: 13px;
+
+  transition: transform .12s ease, filter .18s ease, background .18s ease, border-color .18s ease;
 }
-.btn:hover { background: rgba(124,58,237,0.28); }
+.btn:hover { background: rgba(124,58,237,0.28); filter: brightness(1.06); }
+.btn:active { transform: translateY(1px) scale(0.99); }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
+
 .btn.ghost {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10);
 }
 .btn.ghost:hover { background: rgba(255,255,255,0.08); }
 
+/* Micro-interactions for chips / ready */
+.chip, .statusPill {
+  transition: transform .12s ease, filter .18s ease, background .18s ease, border-color .18s ease;
+}
+.chip:hover, .statusPill:hover { filter: brightness(1.06); }
+.chip:active, .statusPill:active { transform: translateY(1px) scale(0.99); }
+.chip:focus-visible, .statusPill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
+}
+
 /* Responsive */
 @media (max-width: 980px) {
   .cards { grid-template-columns: 1fr; }
-  .hero { width: min(680px, 96vw); }
+  .hero, .searchRow { width: min(680px, 96vw); }
   h1 { font-size: 44px; }
   .sub { font-size: 15px; }
-}
-/* ✅ Only align the 3 card frames (no other changes) */
-.cards { align-items: stretch; }            /* 三个卡片同一行等高对齐 */
-.card  { display: flex; flex-direction: column; }
-.cardHead { min-height: 76px; }             /* 统一卡头高度，避免顶部不齐 */
-/* ✅ ONLY: search/ready bigger + align with cards + shift up slightly (no other changes) */
-
-/* 1) 整体上移一点点：只动 stage 的上内边距（非常轻微） */
-.stage { padding-top: 54px !important; }  /* 原来 64px -> 54px，上移一点点 */
-
-/* 2) 搜索区宽度跟 cards 对齐 */
-.hero { width: min(980px, 96vw) !important; } /* 确保和 .cards 一致 */
-
-/* 3) 搜索框更大 + Ready 更大，并且对齐 */
-.searchRow { gap: 14px !important; }           /* 间距稍微舒服一点 */
-
-.searchWrap {
-  max-width: none !important;                   /* 取消 760 的限制 */
-  width: calc(100% - 92px) !important;          /* 给 Ready 预留宽度 */
-  padding: 8px !important;                      /* 让外壳更厚更大 */
-}
-
-.search {
-  padding: 14px 16px !important;                /* 输入区变大 */
-  font-size: 14px !important;
-}
-
-.statusPill {
-  min-width: 92px !important;                   /* Ready 按钮更大更稳 */
-  height: 42px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 16px !important;
-  font-size: 13px !important;
-}
-/* ✅ ONLY: Make Ready pill match the search bar size/style */
-.statusPill{
-  height: 56px !important;              /* 跟 searchWrap 视觉高度一致 */
-  padding: 0 22px !important;
-  border-radius: 999px !important;
-
-  /* 跟 searchWrap 同一套玻璃壳参数 */
-  background: rgba(255,255,255,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  backdrop-filter: blur(18px) !important;
-  box-shadow: var(--shadow2) !important;
-
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  line-height: 1 !important;
-  min-width: 112px !important;          /* 稳定宽度 */
-}
-/* ========= Premium micro-interactions (NO layout changes) ========= */
-
-/* Buttons / chips: hover + press + focus ring */
-.chip, .statusPill, .btn, .iconBtn {
-  transition: transform .12s ease, filter .18s ease, background .18s ease, border-color .18s ease;
-}
-.chip:hover, .statusPill:hover, .btn:hover, .iconBtn:hover {
-  filter: brightness(1.06);
-}
-.chip:active, .statusPill:active, .btn:active, .iconBtn:active {
-  transform: translateY(1px) scale(0.99);
-}
-.chip:focus-visible, .statusPill:focus-visible, .btn:focus-visible, .iconBtn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
-}
-
-/* Thumbnails: hover + press feedback */
-.thumb {
-  transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease;
-}
-.thumb:hover {
-  border-color: rgba(255,255,255,0.18);
-  box-shadow: 0 14px 40px rgba(0,0,0,0.35);
-  transform: translateY(-1px);
-}
-.thumb:active {
-  transform: translateY(0px) scale(0.99);
-  filter: brightness(0.98);
-}
-
-/* Keyboard focus on thumb (accessibility) */
-.thumb:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.10), 0 0 0 6px rgba(124,58,237,0.22);
-}
-
-/* Selected state (if JS adds .selected on click) */
-.thumb.selected {
-  border-color: rgba(124,58,237,0.55);
-  box-shadow: 0 0 0 2px rgba(124,58,237,0.25), 0 18px 60px rgba(0,0,0,0.40);
-}
-.thumb.selected::after {
-  content: "Selected";
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  letter-spacing: .2px;
-  color: rgba(255,255,255,0.92);
-  background: rgba(124,58,237,0.28);
-  border: 1px solid rgba(124,58,237,0.35);
-  backdrop-filter: blur(12px);
-}
-
-/* Toast stronger feedback when shown */
-.toast {
-  transform: translateX(-50%) translateY(6px);
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0px);
 }
