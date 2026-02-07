@@ -2,348 +2,363 @@
   const $ = (s) => document.querySelector(s);
 
   const cardsEl = $("#cards");
-  const qEl = $("#q");
-  const statusEl = $("#status");
-  const toastEl = $("#toast");
+  const searchInput = $("#searchInput");
+  const statusPill = $("#statusPill");
 
   const langBtn = $("#langBtn");
+  const langText = langBtn.querySelector(".chip-text");
   const repoBtn = $("#repoBtn");
 
   const modal = $("#modal");
-  const modalOverlay = $("#modalOverlay");
-  const modalImg = $("#modalImg");
-  const modalTitle = $("#modalTitle");
-  const modalPath = $("#modalPath");
+  const modalBackdrop = $("#modalBackdrop");
+  const modalClose = $("#modalClose");
+  const doneBtn = $("#doneBtn");
   const copyBtn = $("#copyBtn");
   const openBtn = $("#openBtn");
-  const closeBtn = $("#closeBtn");
+  const modalImg = $("#modalImg");
+  const modalName = $("#modalName");
+  const modalMeta = $("#modalMeta");
+  const toast = $("#toast");
 
-  // ====== Config ======
-  const REPO_OWNER = "byShelby";
-  const REPO_NAME = "assets";
-  const BASE = `${location.origin}${location.pathname.replace(/\/$/, "")}/`; // https://.../assets/
-  const MANIFEST_URL = `${BASE}data/manifest.json`;
-
-  repoBtn.href = `https://github.com/${REPO_OWNER}/${REPO_NAME}`;
-
-  // ====== i18n (固定长度，避免布局抖动) ======
-  const I18N = {
+  const i18n = {
     en: {
       title: "Asset Library",
       subtitle: "Search, preview, and copy direct links.",
-      placeholder: "Search: category / group / filename",
-      openRepo: "Open Repo",
-      copied: "Copied",
-      copyLink: "Copy link",
+      searchPh: "Search: category / group / filename",
+      ready: "Ready",
+      loading: "Loading",
+      failed: "Load failed",
+      noFiles: "No files in this group.",
+      copy: "Copy link",
       open: "Open",
       done: "Done",
-      empty: "No files in this group."
+      copied: "Copied to clipboard",
+      copyFailed: "Copy failed (browser blocked)",
+      avatarsDesc: "Avatars",
+      iconsDesc: "Icons",
+      photosDesc: "Photos",
     },
     zh: {
       title: "资源库",
-      subtitle: "搜索、预览并复制直链。",
-      placeholder: "搜索：分类 / 分组 / 文件名",
-      openRepo: "打开仓库",
-      copied: "已复制",
-      copyLink: "复制链接",
+      subtitle: "搜索、预览、一键复制直链。",
+      searchPh: "搜索：分类 / 分组 / 文件名",
+      ready: "就绪",
+      loading: "加载中",
+      failed: "加载失败",
+      noFiles: "这个分组没有文件。",
+      copy: "复制链接",
       open: "打开",
       done: "完成",
-      empty: "这个分组没有文件。"
-    }
+      copied: "已复制到剪贴板",
+      copyFailed: "复制失败（浏览器限制）",
+      avatarsDesc: "头像",
+      iconsDesc: "图标",
+      photosDesc: "图片",
+    },
   };
 
-  let lang = "en";
-  function t(key){ return I18N[lang][key] || I18N.en[key] || key; }
-  function applyLang(){
-    $("#title").textContent = t("title");
-    $("#subtitle").textContent = t("subtitle");
-    qEl.placeholder = t("placeholder");
-    repoBtn.textContent = t("openRepo");
-    copyBtn.textContent = t("copyLink");
-    openBtn.textContent = t("open");
-    closeBtn.textContent = t("done");
-    langBtn.textContent = lang.toUpperCase();
+  const state = {
+    lang: "en",
+    manifest: null,
+    flatList: [], // {category, group, path, url}
+    current: null,
+    filter: "",
+    activeGroup: { avatars: "root", icons: "root", photos: "root" },
+  };
+
+  function baseUrlFor(path) {
+    // GitHub Pages 项目页：/assets/ + 相对路径
+    return new URL("./" + path, window.location.href).toString();
   }
 
-  langBtn.addEventListener("click", () => {
-    lang = (lang === "en") ? "zh" : "en";
-    applyLang();
-    // 不触发布局变化：按钮宽度固定、标题区域高度稳定
-  });
-
-  // ====== Toast ======
-  let toastTimer = null;
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1100);
+  function setStatus(kind) {
+    const t = i18n[state.lang];
+    if (kind === "loading") statusPill.textContent = t.loading;
+    else if (kind === "failed") statusPill.textContent = t.failed;
+    else statusPill.textContent = t.ready;
   }
 
-  // ====== Copy ======
-  async function copyText(text){
-    try{
+  function setLang(next) {
+    state.lang = next;
+    const t = i18n[state.lang];
+    $("#title").textContent = t.title;
+    $("#subtitle").textContent = t.subtitle;
+    searchInput.placeholder = t.searchPh;
+    langText.textContent = state.lang === "en" ? "EN" : "中";
+    setStatus(state.manifest ? "ready" : "loading");
+
+    // 不让“语言切换”影响布局：按钮固定宽度 + 文案短
+  }
+
+  function toastShow(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.classList.remove("show"), 1400);
+  }
+
+  async function safeCopy(text) {
+    try {
       await navigator.clipboard.writeText(text);
-      toast(t("copied"));
+      toastShow(i18n[state.lang].copied);
       return true;
-    }catch(e){
+    } catch (e) {
       // fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      try{
-        document.execCommand("copy");
-        toast(t("copied"));
-        return true;
-      }catch(_){
-        toast("Copy failed");
-        return false;
-      }finally{
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand("copy");
         document.body.removeChild(ta);
+        toastShow(ok ? i18n[state.lang].copied : i18n[state.lang].copyFailed);
+        return ok;
+      } catch {
+        toastShow(i18n[state.lang].copyFailed);
+        return false;
       }
     }
   }
 
-  // ====== Modal ======
-  let currentUrl = "";
-  function openModal({ url, name, path }){
-    currentUrl = url;
-    modalTitle.textContent = name || "Preview";
-    modalPath.textContent = path || "";
-    modalImg.src = url;
-    modalImg.alt = name || "";
-    openBtn.href = url;
-
+  function openModal(item) {
+    state.current = item;
     modal.classList.add("show");
     modal.setAttribute("aria-hidden", "false");
+
+    // 防止页面滚动（虽然 body 已 overflow hidden，但这里保险）
+    document.body.style.overflow = "hidden";
+
+    modalName.textContent = item.path;
+    modalMeta.textContent = ` · ${item.category}/${item.group}`;
+    modalImg.src = item.url;
+    openBtn.href = item.url;
+
+    copyBtn.textContent = i18n[state.lang].copy;
+    openBtn.textContent = i18n[state.lang].open;
+    doneBtn.textContent = i18n[state.lang].done;
   }
-  function closeModal(){
+
+  function closeModal() {
     modal.classList.remove("show");
     modal.setAttribute("aria-hidden", "true");
-    modalImg.src = "";
-    currentUrl = "";
-  }
-  modalOverlay.addEventListener("click", closeModal);
-  closeBtn.addEventListener("click", closeModal);
-  window.addEventListener("keydown", (e) => {
-    if(e.key === "Escape") closeModal();
-  });
-  copyBtn.addEventListener("click", () => {
-    if(currentUrl) copyText(currentUrl);
-  });
-
-  // ====== Rendering ======
-  function fileNameFromPath(p){
-    const parts = String(p).split("/");
-    return parts[parts.length - 1] || p;
+    state.current = null;
+    document.body.style.overflow = "hidden";
   }
 
-  function buildFileUrl(relPath){
-    // relPath like "avatars/avatar-1.jpg"
-    return `${BASE}${relPath}`;
+  function normalize(s) {
+    return (s || "").toLowerCase().trim();
   }
 
-  function normalizeManifest(manifest){
-    // expected:
-    // categories: { avatars: { total, groups: { root: [...] } }, ... }
-    if(!manifest || !manifest.categories) return null;
-    return manifest;
+  function buildFlatList(manifest) {
+    const list = [];
+    const cats = manifest?.categories || {};
+    for (const category of Object.keys(cats)) {
+      const groups = cats[category]?.groups || {};
+      for (const group of Object.keys(groups)) {
+        const files = groups[group] || [];
+        for (const path of files) {
+          list.push({
+            category,
+            group,
+            path,
+            url: baseUrlFor(path),
+          });
+        }
+      }
+    }
+    state.flatList = list;
   }
 
-  function render(manifest){
+  function matchesFilter(item) {
+    const f = normalize(state.filter);
+    if (!f) return true;
+    const hay = normalize(`${item.category} ${item.group} ${item.path}`);
+    return hay.includes(f);
+  }
+
+  function cardTitle(category) {
+    const t = i18n[state.lang];
+    if (category === "avatars") return t.avatarsDesc;
+    if (category === "icons") return t.iconsDesc;
+    if (category === "photos") return t.photosDesc;
+    return category;
+  }
+
+  function render() {
+    const t = i18n[state.lang];
+    const manifest = state.manifest;
+    if (!manifest) return;
+
+    const cats = manifest.categories || {};
     cardsEl.innerHTML = "";
 
-    const categories = manifest.categories || {};
-    const catKeys = Object.keys(categories);
+    const wanted = ["avatars", "icons", "photos"];
+    for (const category of wanted) {
+      const c = cats[category] || { total: 0, groups: {} };
+      const groups = c.groups || {};
+      const groupNames = Object.keys(groups).length ? Object.keys(groups) : ["root"];
 
-    catKeys.forEach((catKey) => {
-      const cat = categories[catKey];
-      const groups = (cat && cat.groups) ? cat.groups : {};
-      const groupKeys = Object.keys(groups);
+      if (!state.activeGroup[category]) state.activeGroup[category] = groupNames[0] || "root";
+      if (!groupNames.includes(state.activeGroup[category])) state.activeGroup[category] = groupNames[0] || "root";
 
-      const card = document.createElement("section");
+      const card = document.createElement("div");
       card.className = "card";
-      card.dataset.cat = catKey;
 
+      // head
       const head = document.createElement("div");
-      head.className = "cardHead";
+      head.className = "card-head";
 
-      const left = document.createElement("div");
       const title = document.createElement("div");
-      title.className = "cardTitle";
-      title.textContent = cap(catKey);
-      const meta = document.createElement("div");
-      meta.className = "cardMeta";
-      meta.textContent = "root";
-      left.appendChild(title);
-      left.appendChild(meta);
+      title.className = "card-title";
+      title.innerHTML = `<strong>${cardTitle(category)}</strong><span>${state.activeGroup[category]}</span>`;
 
       const badge = document.createElement("div");
       badge.className = "badge";
-      badge.textContent = String(cat.total ?? 0);
+      badge.textContent = String(c.total ?? 0);
 
-      head.appendChild(left);
+      head.appendChild(title);
       head.appendChild(badge);
 
-      const groupsEl = document.createElement("div");
-      groupsEl.className = "groups";
+      // groups
+      const groupRow = document.createElement("div");
+      groupRow.className = "group-row";
+      for (const g of groupNames) {
+        const pill = document.createElement("div");
+        pill.className = "group-pill" + (g === state.activeGroup[category] ? " active" : "");
+        pill.textContent = g;
+        pill.addEventListener("click", () => {
+          state.activeGroup[category] = g;
+          render();
+        });
+        groupRow.appendChild(pill);
+      }
 
-      // default group: root if exists else first
-      let activeGroup = groupKeys.includes("root") ? "root" : (groupKeys[0] || "root");
-
+      // body
       const body = document.createElement("div");
-      body.className = "cardBody";
+      body.className = "card-body";
 
-      function renderGroup(gName){
-        body.innerHTML = "";
-        const files = groups[gName] || [];
-        if(!files.length){
-          const empty = document.createElement("div");
-          empty.className = "empty";
-          empty.textContent = t("empty");
-          body.appendChild(empty);
-          return;
-        }
+      const scroller = document.createElement("div");
+      scroller.className = "scroller";
 
-        const grid = document.createElement("div");
-        grid.className = "grid";
+      // ✅ 关键：滚轮只滚 scroller，不滚页面
+      scroller.addEventListener(
+        "wheel",
+        (e) => {
+          // 允许内部滚动，阻止外层滚动链
+          const atTop = scroller.scrollTop === 0;
+          const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+          if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+            e.preventDefault();
+          }
+        },
+        { passive: false }
+      );
 
-        files.forEach((p) => {
-          const url = buildFileUrl(p);
-          const name = fileNameFromPath(p);
+      const grid = document.createElement("div");
+      grid.className = "grid";
 
-          const tile = document.createElement("div");
-          tile.className = "tile";
-          tile.tabIndex = 0;
+      const files = (groups[state.activeGroup[category]] || []).map((path) => ({
+        category,
+        group: state.activeGroup[category],
+        path,
+        url: baseUrlFor(path),
+      }));
 
+      const shown = files.filter(matchesFilter);
+
+      if (!shown.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = t.noFiles;
+        scroller.appendChild(empty);
+      } else {
+        for (const item of shown) {
+          const cell = document.createElement("div");
+          cell.className = "thumb";
           const img = document.createElement("img");
-          img.className = "thumb";
           img.loading = "lazy";
-          img.src = url;
-          img.alt = name;
+          img.decoding = "async";
+          img.src = item.url;
+          img.alt = item.path;
 
-          const label = document.createElement("div");
-          label.className = "tileLabel";
-          label.textContent = p;
+          // 图片加载失败时，用占位，避免布局崩
+          img.onerror = () => {
+            img.remove();
+            cell.style.background = "rgba(255,255,255,.04)";
+          };
 
-          tile.appendChild(img);
-          tile.appendChild(label);
+          cell.appendChild(img);
+          cell.title = item.path;
 
-          tile.addEventListener("click", () => {
-            openModal({ url, name, path: p });
-          });
-
-          tile.addEventListener("keydown", (e) => {
-            if(e.key === "Enter" || e.key === " "){
-              e.preventDefault();
-              openModal({ url, name, path: p });
-            }
-          });
-
-          grid.appendChild(tile);
-        });
-
-        body.appendChild(grid);
+          cell.addEventListener("click", () => openModal(item));
+          grid.appendChild(cell);
+        }
+        scroller.appendChild(grid);
       }
 
-      // groups pills
-      if(groupKeys.length){
-        groupKeys.forEach((g) => {
-          const pill = document.createElement("button");
-          pill.type = "button";
-          pill.className = "groupPill" + (g === activeGroup ? " isActive" : "");
-          pill.textContent = g;
-          pill.addEventListener("click", () => {
-            activeGroup = g;
-            [...groupsEl.children].forEach((x) => x.classList.remove("isActive"));
-            pill.classList.add("isActive");
-            renderGroup(activeGroup);
-          });
-          groupsEl.appendChild(pill);
-        });
-      }else{
-        // no groups at all
-        const pill = document.createElement("button");
-        pill.type = "button";
-        pill.className = "groupPill isActive";
-        pill.textContent = "root";
-        groupsEl.appendChild(pill);
-      }
-
-      renderGroup(activeGroup);
+      body.appendChild(scroller);
 
       card.appendChild(head);
-      card.appendChild(groupsEl);
+      card.appendChild(groupRow);
       card.appendChild(body);
 
       cardsEl.appendChild(card);
-    });
-
-    statusEl.textContent = "Ready";
-  }
-
-  // ====== Search ======
-  function cap(s){
-    if(!s) return "";
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  function applySearch(query){
-    const q = String(query || "").trim().toLowerCase();
-    const cards = [...cardsEl.querySelectorAll(".card")];
-    if(!q){
-      cards.forEach((c) => c.style.display = "");
-      // show all tiles
-      [...cardsEl.querySelectorAll(".tile")].forEach((t) => t.style.display = "");
-      return;
     }
-
-    cards.forEach((card) => {
-      let any = false;
-      const tiles = [...card.querySelectorAll(".tile")];
-      tiles.forEach((tile) => {
-        const path = tile.querySelector(".tileLabel")?.textContent || "";
-        const ok = path.toLowerCase().includes(q) || card.dataset.cat.toLowerCase().includes(q);
-        tile.style.display = ok ? "" : "none";
-        if(ok) any = true;
-      });
-      card.style.display = any ? "" : "none";
-    });
   }
 
-  qEl.addEventListener("input", () => applySearch(qEl.value));
-
-  // ====== Load manifest ======
-  async function loadManifest(){
-    statusEl.textContent = "Loading…";
-    try{
-      // cache-bust: 防止你一直看到旧版本
-      const url = `${MANIFEST_URL}?v=${Date.now()}`;
+  async function loadManifest() {
+    setStatus("loading");
+    try {
+      // ✅ 强制走相对路径，避免 /assets/ 子路径错乱
+      const url = baseUrlFor("data/manifest.json");
       const res = await fetch(url, { cache: "no-store" });
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const manifest = normalizeManifest(json);
-      if(!manifest) throw new Error("Bad manifest");
-      render(manifest);
-    }catch(err){
-      console.error(err);
-      statusEl.textContent = "Load failed";
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const manifest = await res.json();
+      state.manifest = manifest;
+      buildFlatList(manifest);
+      setStatus("ready");
+      render();
+    } catch (e) {
+      console.error(e);
+      setStatus("failed");
+      // 页面仍然保持优雅，不要把错误文案堆屏幕中间
       cardsEl.innerHTML = "";
-      const fail = document.createElement("div");
-      fail.className = "empty";
-      fail.style.padding = "18px";
-      fail.textContent = "Manifest load failed.";
-      cardsEl.appendChild(fail);
     }
+  }
+
+  function bind() {
+    // lang toggle
+    langBtn.addEventListener("click", () => {
+      setLang(state.lang === "en" ? "zh" : "en");
+      render();
+    });
+
+    // search
+    searchInput.addEventListener("input", () => {
+      state.filter = searchInput.value || "";
+      render();
+    });
+
+    // modal
+    modalBackdrop.addEventListener("click", closeModal);
+    modalClose.addEventListener("click", closeModal);
+    doneBtn.addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      if (!state.current) return;
+      await safeCopy(state.current.url);
+    });
   }
 
   // init
-  applyLang();
+  setLang("en");
+  bind();
   loadManifest();
-
-  // expose for quick debug
-  window.__assetlib = { loadManifest };
 })();
