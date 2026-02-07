@@ -432,3 +432,34 @@ h1 {
 .cards { align-items: stretch; }            /* 三个卡片同一行等高对齐 */
 .card  { display: flex; flex-direction: column; }
 .cardHead { min-height: 76px; }             /* 统一卡头高度，避免顶部不齐 */
+/* ✅ ONLY: search/ready bigger + align with cards + shift up slightly (no other changes) */
+
+/* 1) 整体上移一点点：只动 stage 的上内边距（非常轻微） */
+.stage { padding-top: 54px !important; }  /* 原来 64px -> 54px，上移一点点 */
+
+/* 2) 搜索区宽度跟 cards 对齐 */
+.hero { width: min(980px, 96vw) !important; } /* 确保和 .cards 一致 */
+
+/* 3) 搜索框更大 + Ready 更大，并且对齐 */
+.searchRow { gap: 14px !important; }           /* 间距稍微舒服一点 */
+
+.searchWrap {
+  max-width: none !important;                   /* 取消 760 的限制 */
+  width: calc(100% - 92px) !important;          /* 给 Ready 预留宽度 */
+  padding: 8px !important;                      /* 让外壳更厚更大 */
+}
+
+.search {
+  padding: 14px 16px !important;                /* 输入区变大 */
+  font-size: 14px !important;
+}
+
+.statusPill {
+  min-width: 92px !important;                   /* Ready 按钮更大更稳 */
+  height: 42px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
+}
