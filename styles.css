@@ -12,9 +12,8 @@
   --shadow: 0 24px 80px rgba(0,0,0,.55);
   --radius: 20px;
   --radius2: 26px;
-  --pad: 18px;
   --max: 1100px;
-  scrollbar-gutter: stable; /* prevents width jump */
+  scrollbar-gutter: stable;
 }
 
 *{box-sizing:border-box}
@@ -46,7 +45,6 @@ body{
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
-
 .brand{display:flex; align-items:center; gap:10px; min-width: 220px;}
 .dot{
   width:10px; height:10px; border-radius:999px;
@@ -55,11 +53,7 @@ body{
 }
 .brand-title{font-weight:700; letter-spacing:.2px}
 .brand-sub{font-size:12px; color:var(--muted2); border:1px solid rgba(255,255,255,.10); padding:3px 8px; border-radius:999px}
-
-.actions{
-  display:flex; align-items:center; gap:10px;
-  min-width: 220px; justify-content:flex-end;
-}
+.actions{display:flex; align-items:center; gap:10px; min-width: 220px; justify-content:flex-end;}
 .pill{
   appearance:none;
   border: 1px solid rgba(255,255,255,.10);
@@ -93,10 +87,7 @@ body{
   font-size: 14px;
   min-height: 22px;
 }
-
-.searchRow{
-  display:flex; align-items:center; gap:12px;
-}
+.searchRow{display:flex; align-items:center; gap:12px;}
 .search{
   flex:1;
   height: 44px;
@@ -110,12 +101,7 @@ body{
 }
 .search::placeholder{color: rgba(255,255,255,.34)}
 .search:focus{border-color: rgba(155,123,255,.45); background: rgba(0,0,0,.34)}
-.status{
-  min-width: 160px;
-  text-align:right;
-  color: var(--muted2);
-  font-size: 12px;
-}
+.status{min-width: 160px; text-align:right; color: var(--muted2); font-size: 12px;}
 
 /* ====== Cards ====== */
 .cards{
@@ -124,7 +110,6 @@ body{
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-
 .card{
   border-radius: var(--radius2);
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -167,29 +152,23 @@ body{
 .groupBtn.active{border-color: rgba(155,123,255,.45); background: rgba(155,123,255,.10)}
 .groupBtn:active{transform: translateY(1px)}
 
-/* ====== IMPORTANT FIX: internal vertical scrolling for image area ====== */
-/* The page still scrolls normally, but when your cursor is over the grid,
-   the scroll will stay inside the grid instead of moving the whole page. */
+/* ====== ✅ FIX: image grid is a fixed-height viewport with internal vertical scroll ====== */
 .grid{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 
-  /* key: make it its own scroll container */
-  max-height: 360px;
-  overflow-y: auto;
+  height: 360px;              /* 固定展示框高度：图片在里面滚 */
+  overflow-y: auto;           /* 只滚动这里 */
   overflow-x: hidden;
 
-  /* prevent scroll chaining to the page */
-  overscroll-behavior: contain;
+  overscroll-behavior: contain; /* 不把滚动传给页面 */
 
-  /* keep scrollbars invisible */
-  scrollbar-width: none;
-  padding-right: 4px; /* avoids layout shift */
+  scrollbar-width: none;      /* firefox hide */
+  padding-right: 4px;         /* 防止内容贴边 */
 }
-.grid::-webkit-scrollbar{width:0;height:0}
+.grid::-webkit-scrollbar{width:0;height:0} /* webkit hide */
 
-/* tiles */
 .tile{
   border-radius: 18px;
   background: rgba(0,0,0,.25);
@@ -261,7 +240,6 @@ body{
   cursor:pointer;
 }
 .iconbtn:hover{background: rgba(0,0,0,.34)}
-
 .modal-body{padding: 16px}
 .preview{
   width:100%;
@@ -276,7 +254,6 @@ body{
   object-fit: contain;
   display:block;
 }
-
 .modal-foot{
   display:flex; gap:10px;
   padding: 14px 16px;
