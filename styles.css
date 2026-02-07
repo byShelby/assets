@@ -94,17 +94,16 @@ body {
 }
 .chip:hover { background: rgba(255,255,255,0.08); }
 
-/* Stage */
 .stage {
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 120px 24px 36px;
+  padding: 88px 24px 36px;
 }
 .hero {
   width: min(980px, 96vw);
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 h1 {
   margin: 0 0 6px 0;
