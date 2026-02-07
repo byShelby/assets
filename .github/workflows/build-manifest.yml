@@ -1,29 +1,50 @@
-name: build-manifest
+name: Build manifest
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ main ]
+    paths:
+      - "avatars/**"
+      - "icons/**"
+      - "photos/**"
+      - "scripts/build-manifest.mjs"
+      - "data/**"
+      - ".github/workflows/build-manifest.yml"
+  workflow_dispatch: {}
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-manifest
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: "20"
+          fetch-depth: 0
 
-      - name: Build manifest
-        run: node scripts/build-manifest.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Commit manifest if changed
+      - name: Build manifest.json
+        run: node scripts/build-manifest.mjs
+
+      - name: Commit & push if changed
         run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/manifest.json
-          git diff --cached --quiet || (git commit -m "chore: update manifest.json" && git push)
+          git commit -m "chore: update manifest"
+          git push
