@@ -1,0 +1,81 @@
+name: Build index.json for assets
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - "index.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate index.json
+        run: |
+          python3 - << 'PY'
+          import os, json, re
+
+          ROOT = os.getcwd()
+          TOPS = ["avatars","icons","photos"]
+          ALLOW = re.compile(r"\.(png|jpg|jpeg|gif|webp|svg)$", re.I)
+
+          def walk_section(sec):
+            out = {}
+            base = os.path.join(ROOT, sec)
+            if not os.path.isdir(base):
+              return out
+
+            # collect files directly under sec => root
+            root_files = []
+            for name in os.listdir(base):
+              p = os.path.join(base, name)
+              if os.path.isfile(p) and ALLOW.search(name):
+                root_files.append(f"{sec}/{name}")
+
+            if root_files:
+              out["root"] = sorted(root_files)
+
+            # second-level directories => categories
+            for cat in sorted(os.listdir(base)):
+              cat_dir = os.path.join(base, cat)
+              if not os.path.isdir(cat_dir):
+                continue
+              files = []
+              for r, _, fnames in os.walk(cat_dir):
+                for f in fnames:
+                  if not ALLOW.search(f):
+                    continue
+                  rel = os.path.relpath(os.path.join(r, f), ROOT).replace("\\","/")
+                  files.append(rel)
+              if files:
+                out[cat] = sorted(files)
+            return out
+
+          data = {sec: walk_section(sec) for sec in TOPS}
+
+          with open("index.json","w",encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+          print("Wrote index.json")
+          PY
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- index.json; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git commit -m "chore: update index.json"
+          git push
