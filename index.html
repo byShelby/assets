@@ -1,77 +1,75 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Asset Library</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="bg"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Asset Library</title>
+  <link rel="stylesheet" href="./styles.css?v=1"/>
+</head>
 
-    <main class="shell" id="app">
-      <header class="topbar">
-        <div class="brand">
-          <div class="pill">
-            <span class="dot"></span>
-            <span class="pillText">assets</span>
-            <span class="pillSub">GitHub Pages</span>
-          </div>
-        </div>
+<body>
+  <div class="bg"></div>
 
-        <div class="actions">
-          <button class="lang" id="langBtn" type="button" aria-label="Switch language">
-            <span id="langLabel">EN</span>
-          </button>
-          <a class="btn" id="repoBtn" href="#" target="_blank" rel="noreferrer">Open Repo</a>
-        </div>
-      </header>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="dot"></span>
+        <span class="brand-title">assets</span>
+        <span class="brand-sub">GitHub Pages</span>
+      </div>
 
-      <section class="hero">
-        <h1 id="title">Asset Library</h1>
-        <p id="subtitle">Search, preview, and copy direct links.</p>
-
-        <div class="searchWrap">
-          <input
-            id="q"
-            class="search"
-            type="search"
-            placeholder="Search: category / group / filename"
-            autocomplete="off"
-          />
-          <div class="status" id="status"></div>
-        </div>
-      </section>
-
-      <section class="grid" id="grid"></section>
-    </main>
-
-    <!-- Preview Modal -->
-    <div class="modal" id="modal" aria-hidden="true">
-      <div class="modalOverlay" id="modalOverlay"></div>
-      <div class="modalCard" role="dialog" aria-modal="true" aria-label="Preview">
-        <div class="modalTop">
-          <div class="modalMeta">
-            <div class="modalName" id="modalName">—</div>
-            <div class="modalPath" id="modalPath">—</div>
-          </div>
-
-          <div class="modalBtns">
-            <button class="btnGhost" id="copyBtn" type="button">Copy link</button>
-            <a class="btnGhost" id="openBtn" href="#" target="_blank" rel="noreferrer">Open</a>
-            <button class="btn" id="closeBtn" type="button">Done</button>
-          </div>
-        </div>
-
-        <div class="modalBody">
-          <img id="modalImg" alt="" />
-        </div>
+      <div class="topbar-actions">
+        <button id="langBtn" class="lang-btn" type="button" aria-label="Language toggle">EN</button>
+        <a id="repoBtn" class="btn btn-ghost" href="#" target="_blank" rel="noreferrer">Open Repo</a>
       </div>
     </div>
+  </header>
 
-    <!-- Toast -->
-    <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+  <main class="shell">
+    <section class="hero">
+      <h1 id="title">Asset Library</h1>
+      <p id="subtitle" class="subtitle">Search, preview, and copy direct links.</p>
 
-    <script src="./app.js"></script>
-  </body>
+      <div class="search-row">
+        <div class="search">
+          <input id="searchInput" type="search" spellcheck="false" placeholder="Search: category / group / filename" />
+        </div>
+        <div id="statusPill" class="pill pill-muted" aria-live="polite">Ready</div>
+      </div>
+    </section>
+
+    <section id="grid" class="grid" aria-label="Asset categories"></section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Preview">
+      <div class="modal-head">
+        <div class="modal-meta">
+          <div id="modalName" class="modal-name">—</div>
+          <div id="modalPath" class="modal-path">—</div>
+        </div>
+        <button class="icon-btn" type="button" data-close="1" aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <img id="modalImg" alt="Preview"/>
+      </div>
+
+      <div class="modal-actions">
+        <button id="copyBtn" class="btn btn-primary" type="button">Copy link</button>
+        <a id="openBtn" class="btn btn-ghost" href="#" target="_blank" rel="noreferrer">Open</a>
+        <button class="btn btn-ghost" type="button" data-close="1">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="./app.js?v=1" defer></script>
+</body>
 </html>
