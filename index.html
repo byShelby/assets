@@ -3,53 +3,58 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Assets</title>
+  <meta name="color-scheme" content="dark" />
+  <title>Asset Library</title>
+
+  <!-- ✅关键：让 GitHub Pages 项目站点 (/assets/) 的所有相对路径永远正确 -->
+  <base href="./" />
+
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <header class="top">
     <div class="brand">
-      <span class="dot"></span>
-      <span class="name">assets</span>
-      <span class="tag">GitHub Pages</span>
+      <div class="dot"></div>
+      <div class="name">assets</div>
+      <div class="tag">GitHub Pages</div>
     </div>
 
     <div class="actions">
-      <button id="langBtn" class="chip" type="button">EN</button>
-      <a id="repoBtn" class="chip" href="#" target="_blank" rel="noreferrer">Open Repo</a>
+      <button class="pill" id="langBtn" type="button">EN</button>
+      <a class="pill primary" id="repoBtn" target="_blank" rel="noopener">Open Repo</a>
     </div>
   </header>
 
   <main class="wrap">
-    <h1 id="title" class="h1">Asset Library</h1>
-    <p id="subtitle" class="sub">Search, preview, and copy direct links.</p>
+    <h1 id="title">Asset Library</h1>
+    <p class="sub" id="subtitle">Search, preview, and copy direct links.</p>
 
     <div class="searchRow">
-      <input id="q" class="search" placeholder="Search: category / group / filename" />
-      <div id="status" class="status"></div>
+      <input id="q" class="search" placeholder="Search: category / group / filename" autocomplete="off" />
+      <div class="status" id="status"></div>
     </div>
 
-    <section id="grid" class="grid"></section>
+    <section class="grid" id="grid"></section>
   </main>
 
   <!-- Preview Modal -->
-  <div id="modal" class="modal" aria-hidden="true">
-    <div class="modalBackdrop"></div>
-    <div class="modalCard">
-      <div class="modalTop">
-        <div class="modalPath" id="modalPath"></div>
-        <div class="modalBtns">
-          <button id="copyBtn" class="btn" type="button">Copy link</button>
-          <a id="openBtn" class="btn" href="#" target="_blank" rel="noreferrer">Open</a>
-          <button id="closeBtn" class="btn" type="button">Close</button>
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Preview">
+      <div class="modal-top">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-actions">
+          <button class="btn" id="copyBtn" type="button">Copy link</button>
+          <a class="btn" id="openBtn" target="_blank" rel="noopener">Open</a>
+          <button class="btn" id="closeBtn" type="button">Done</button>
         </div>
       </div>
-      <div class="modalBody">
+      <div class="modal-body">
         <img id="modalImg" alt="" />
       </div>
     </div>
   </div>
 
-  <script src="./app.js" defer></script>
+  <script src="./app.js"></script>
 </body>
 </html>
