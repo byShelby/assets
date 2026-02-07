@@ -1,56 +1,45 @@
-import fs from "fs";
-import path from "path";
+const fs = require("fs");
+const path = require("path");
 
-const ROOTS = ["avatars", "icons", "photos"];
-const EXTS = new Set([
-  ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".ico", ".avif"
-]);
+const ROOT = process.cwd();
+const OUT_DIR = path.join(ROOT, "data");
+const OUT_FILE = path.join(OUT_DIR, "manifest.json");
 
-function walk(dir) {
+const CATEGORIES = ["avatars", "icons", "photos"];
+const IMAGE_EXT = new Set([".png",".jpg",".jpeg",".webp",".gif",".svg",".ico"]);
+
+function listFiles(dir){
   const out = [];
-  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, ent.name);
-    if (ent.isDirectory()) {
-      out.push(...walk(full));
-    } else {
-      const ext = path.extname(ent.name).toLowerCase();
-      if (EXTS.has(ext)) out.push(full.replaceAll("\\", "/"));
-    }
+  if(!fs.existsSync(dir)) return out;
+  for (const name of fs.readdirSync(dir)){
+    if(name.startsWith(".")) continue;
+    const p = path.join(dir, name);
+    const st = fs.statSync(p);
+    if(st.isDirectory()) continue; // ✅ 你要“不要子文件夹”，所以直接忽略目录
+    const ext = path.extname(name).toLowerCase();
+    if(IMAGE_EXT.has(ext)) out.push(name);
   }
-  return out;
+  return out.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true, sensitivity:"base"}));
 }
 
-function groupBySubfolder(files, root) {
-  // root = "avatars"
-  // "avatars/avatar-1.jpg" => sub = "root"
-  // "avatars/people/a.jpg" => sub = "people"
-  const groups = {};
-  for (const f of files) {
-    const rel = f.replace(root + "/", "");
-    const parts = rel.split("/");
-    const sub = parts.length === 1 ? "root" : parts[0];
-    groups[sub] ??= [];
-    groups[sub].push(f);
+function build(){
+  const categories = {};
+  for (const cat of CATEGORIES){
+    const dir = path.join(ROOT, cat);
+    const files = listFiles(dir);
+    categories[cat] = {
+      total: files.length,
+      groups: {
+        root: files.map(f => `${cat}/${f}`)
+      }
+    };
   }
-  // sort for stability
-  for (const k of Object.keys(groups)) groups[k].sort();
-  return groups;
-}
-
-const manifest = {
-  generatedAt: new Date().toISOString(),
-  categories: {}
-};
-
-for (const root of ROOTS) {
-  if (!fs.existsSync(root)) continue;
-  const files = walk(root).map(p => p); // e.g. "avatars/avatar-1.jpg"
-  manifest.categories[root] = {
-    total: files.length,
-    groups: groupBySubfolder(files, root)
+  return {
+    generatedAt: new Date().toISOString(),
+    categories
   };
 }
 
-fs.mkdirSync("data", { recursive: true });
-fs.writeFileSync("data/manifest.json", JSON.stringify(manifest, null, 2));
-console.log("✅ data/manifest.json updated");
+fs.mkdirSync(OUT_DIR, { recursive: true });
+fs.writeFileSync(OUT_FILE, JSON.stringify(build(), null, 2), "utf8");
+console.log("Wrote", OUT_FILE);
