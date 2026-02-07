@@ -1,75 +1,78 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
-  <title>Asset Library</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asset Library</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <div class="noise"></div>
 
-<body>
-  <div class="bg"></div>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span class="brand-text">assets</span>
+        <span class="pill">GitHub Pages</span>
+      </div>
 
-  <div class="stage">
-    <div class="shell">
-      <header class="topbar">
-        <div class="brand">
-          <span class="dot"></span>
-          <span class="brand-title">assets</span>
-          <span class="brand-sub">GitHub Pages</span>
-        </div>
+      <div class="top-actions">
+        <button id="langBtn" class="chip chip-fixed" type="button" aria-label="Language">
+          <span class="chip-text">EN</span>
+        </button>
+        <a id="repoBtn" class="chip" href="https://github.com/byShelby/assets" target="_blank" rel="noreferrer">
+          Open Repo
+        </a>
+      </div>
+    </header>
 
-        <div class="actions">
-          <button id="langBtn" class="pill pill-ghost" type="button" aria-label="Language toggle">EN</button>
-          <a id="repoBtn" class="pill" href="#" target="_blank" rel="noreferrer">Open Repo</a>
-        </div>
-      </header>
-
+    <main class="shell">
       <section class="hero">
-        <h1 id="title" class="h1">Asset Library</h1>
-        <p id="subtitle" class="sub">Search, preview, and copy direct links.</p>
+        <h1 id="title">Asset Library</h1>
+        <p id="subtitle" class="subtitle">Search, preview, and copy direct links.</p>
 
-        <div class="searchRow">
-          <div class="search">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6"/>
-              <path d="M16.2 16.2 21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-            <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="Search: category / group / filename" />
-            <span id="status" class="status">Ready</span>
-          </div>
+        <div class="searchbar">
+          <input
+            id="searchInput"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="Search: category / group / filename"
+          />
+          <div class="status" id="statusPill">Ready</div>
         </div>
       </section>
 
-      <main class="cards" id="cards"></main>
+      <section class="cards" id="cards"></section>
+    </main>
 
-      <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
-      <div class="modal" id="modal" aria-hidden="true">
-        <div class="modalOverlay" id="modalOverlay"></div>
-        <div class="modalPanel" role="dialog" aria-modal="true" aria-label="Preview">
-          <div class="modalTop">
-            <div class="modalMeta">
-              <div id="modalTitle" class="modalTitle">Preview</div>
-              <div id="modalPath" class="modalPath"></div>
-            </div>
-
-            <div class="modalBtns">
-              <button id="copyBtn" class="pill" type="button">Copy link</button>
-              <a id="openBtn" class="pill pill-ghost" href="#" target="_blank" rel="noreferrer">Open</a>
-              <button id="closeBtn" class="pill pill-ghost" type="button">Done</button>
-            </div>
+    <!-- Preview Modal -->
+    <div class="modal" id="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Preview">
+        <div class="modal-head">
+          <div class="modal-title">
+            <span id="modalName" class="mono"></span>
+            <span id="modalMeta" class="muted"></span>
           </div>
-
-          <div class="modalBody">
-            <img id="modalImg" alt="" />
-          </div>
+          <button class="iconbtn" id="modalClose" type="button" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <img id="modalImg" alt="preview" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="copyBtn" type="button">Copy link</button>
+          <a class="btn btn-ghost" id="openBtn" target="_blank" rel="noreferrer">Open</a>
+          <button class="btn btn-ghost" id="doneBtn" type="button">Done</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <script defer src="./app.js"></script>
-</body>
+    <!-- Toast -->
+    <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="./app.js" defer></script>
+  </body>
 </html>
